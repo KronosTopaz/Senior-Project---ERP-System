@@ -48,7 +48,7 @@ def main():
                          destinationDate DATE,
                          sku INTEGER NOT NULL,
                          pID INTEGER NOT NULL,
-                         incomingAmount INTEGER NOT NULL,
+                         productAmount INTEGER NOT NULL,
                          orderCost REAL NOT NULL,
                          FOREIGN KEY (sku) REFERENCES inventory(sku),
                          FOREIGN KEY (pID) REFERENCES party(pID)
@@ -160,7 +160,7 @@ def main():
     cursor.executemany('INSERT INTO userToGroups (uID, gID) VALUES (?, ?)', userGroupData)
     cursor.executemany('INSERT INTO party (partyName, pType) VALUES (?, ?)', partyData)
     cursor.executemany('INSERT INTO inventory (partName, currentAmount, pricePerUnit) VALUES (?, ?, ?)', inventoryData)
-    cursor.executemany('INSERT INTO orders (estimatedArrival, sku, sID, incomingAmount, orderCost) VALUES (?, ?, ?, ?, ?)', orderData)
+    cursor.executemany('INSERT INTO orders (destinationDate, sku, pID, productAmount, orderCost) VALUES (?, ?, ?, ?, ?)', orderData)
 
     #Save changes
     conn.commit()
