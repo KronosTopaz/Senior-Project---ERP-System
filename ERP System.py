@@ -7,7 +7,7 @@ def main():
     dropGroupTable = ('DROP TABLE IF EXISTS groups')
     dropUserGroupTable = ('DROP TABLE IF EXISTS userToGroups')
     dropInventoryTable = ('DROP TABLE IF EXISTS inventory')
-    dropSupplierTable = ('DROP TABLE IF EXISTS suppliers')
+    dropPartyTable = ('DROP TABLE IF EXISTS party')
     dropOrderTable = ('DROP TABLE IF EXISTS orders')
 
     # Create Table SQL
@@ -37,20 +37,21 @@ def main():
                             pricePerUnit REAL NOT NULL
                             )''')
     
-    createSupplierTable = ('''CREATE TABLE IF NOT EXISTS suppliers
-                           (sID INTEGER PRIMARY KEY AUTOINCREMENT,
-                           supplierName TEXT NOT NULL
+    createPartyTable = ('''CREATE TABLE IF NOT EXISTS party
+                           (pID INTEGER PRIMARY KEY AUTOINCREMENT,
+                           partyName TEXT NOT NULL,
+                           pType INTEGER NOT NULL
                            )''')
     
     createOrdersTable = ('''CREATE TABLE IF NOT EXISTS orders
                          (orderNumber INTEGER PRIMARY KEY AUTOINCREMENT,
-                         estimatedArrival DATE,
+                         destinationDate DATE,
                          sku INTEGER NOT NULL,
-                         sID INTEGER NOT NULL,
+                         pID INTEGER NOT NULL,
                          incomingAmount INTEGER NOT NULL,
                          orderCost REAL NOT NULL,
                          FOREIGN KEY (sku) REFERENCES inventory(sku),
-                         FOREIGN KEY (sID) REFERENCES suppliers(sID)
+                         FOREIGN KEY (pID) REFERENCES party(pID)
                          )''')
     
     # Inserting Data
@@ -73,22 +74,26 @@ def main():
                      (4, 3),
                      (5, 3)]
     
-    supplierData = [("Samsung",),
-                    ("TSMC",),
-                    ("Qualcomm",),
-                    ("LG",),
-                    ("Foxconn",),
-                    ("Arduino",),
-                    ("AAC Technologies",),
-                    ("AKG",),
-                    ("InvenSense Inc.",),
-                    ("EEJA LTD.",),
-                    ("Innovatronix",),
-                    ("Behringer",),
-                    ("Agood Company",),
-                    ("Vishay",),
-                    ("Anker",),
-                    ("SK Hynix",)]
+    partyData = [("Samsung", 1),
+                ("TSMC", 1),
+                ("Qualcomm", 1),
+                ("LG", 1),
+                ("Foxconn", 1),
+                ("Arduino", 1),
+                ("AAC Technologies", 1),
+                ("AKG", 1),
+                ("InvenSense Inc.", 1),
+                ("EEJA LTD.", 1),
+                ("Innovatronix", 1),
+                ("Behringer", 1),
+                ("Agood Company", 1),
+                ("Vishay", 1),
+                ("Anker", 1),
+                ("SK Hynix", 1),
+                ("Best Buy", 2),
+                ("Microcenter", 2),
+                ("Fry's Electronics", 2),
+                ("Radioshack", 2)]
     
     inventoryData = [("Battery", 10038, 0.48),
                      ("CPU", 25740, 0.68),
@@ -138,7 +143,7 @@ def main():
     cursor.execute(dropGroupTable)
     cursor.execute(dropUserGroupTable)
     cursor.execute(dropInventoryTable)
-    cursor.execute(dropSupplierTable)
+    cursor.execute(dropPartyTable)
     cursor.execute(dropOrderTable)
 
     # Create tables
@@ -146,14 +151,14 @@ def main():
     cursor.execute(createGroupTable)
     cursor.execute(createUserGroupTable)
     cursor.execute(createInventoryTable)
-    cursor.execute(createSupplierTable)
+    cursor.execute(createPartyTable)
     cursor.execute(createOrdersTable)
 
     # Insert Data
     cursor.executemany('INSERT INTO users (username, password, lastLogin) VALUES (?, ?, ?)', userData)
     cursor.executemany('INSERT INTO groups (role) VALUES (?)', groupData)
     cursor.executemany('INSERT INTO userToGroups (uID, gID) VALUES (?, ?)', userGroupData)
-    cursor.executemany('INSERT INTO suppliers (supplierName) VALUES (?)', supplierData)
+    cursor.executemany('INSERT INTO party (partyName, pType) VALUES (?, ?)', partyData)
     cursor.executemany('INSERT INTO inventory (partName, currentAmount, pricePerUnit) VALUES (?, ?, ?)', inventoryData)
     cursor.executemany('INSERT INTO orders (estimatedArrival, sku, sID, incomingAmount, orderCost) VALUES (?, ?, ?, ?, ?)', orderData)
 
