@@ -135,7 +135,7 @@ def main():
                  ("2026-04-30", 23, 9, 35, 5.95)]
 
     # Connect to DB & Create Cursor
-    conn = sqlite3.connect('MRP Test.db')
+    conn = sqlite3.connect('ERP Test.db')
     cursor = conn.cursor()
 
     # Drop existing tables
