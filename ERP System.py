@@ -33,26 +33,33 @@ def main():
     createInventoryTable = ('''CREATE TABLE IF NOT EXISTS inventory
                             (sku INTEGER PRIMARY KEY AUTOINCREMENT,
                             partName TEXT NOT NULL,
-                            currentAmount INTEGER NOT NULL,
+                            quantity INTEGER NOT NULL,
                             pricePerUnit REAL NOT NULL
                             )''')
     
     createPartyTable = ('''CREATE TABLE IF NOT EXISTS party
-                           (pID INTEGER PRIMARY KEY AUTOINCREMENT,
-                           partyName TEXT NOT NULL,
-                           pType INTEGER NOT NULL
-                           )''')
+                        (pID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        partyName TEXT NOT NULL,
+                        pType INTEGER NOT NULL
+                        )''')
     
     createOrdersTable = ('''CREATE TABLE IF NOT EXISTS orders
                          (orderNumber INTEGER PRIMARY KEY AUTOINCREMENT,
                          destinationDate DATE,
-                         sku INTEGER NOT NULL,
                          pID INTEGER NOT NULL,
-                         productAmount INTEGER NOT NULL,
-                         orderCost REAL NOT NULL,
-                         FOREIGN KEY (sku) REFERENCES inventory(sku),
+                         totalCost NUMERIC NOT NULL,
                          FOREIGN KEY (pID) REFERENCES party(pID)
                          )''')
+    
+    createOrderDetailsTable = ('''CREATE TABLE IF NOT EXISTS orderDetails
+                                (lineID INTEGER PRIMARY KEY AUTOINCREMENT,
+                                orderNumber INTEGER NOT NULL,
+                                sku INTEGER NOT NULL,
+                                productQuantity INTEGER NOT NULL,
+                                itemCost NUMERIC NOT NULL,
+                                FOREIGN KEY (orderNumber) REFERENCES orders(orderNumber),
+                                FOREIGN KEY (sku) REFERENCES inventory(sku)
+                                )''')
     
     # Inserting Data
     userData = [("Jimmy", "I_Love_Working", "2026-01-01 13:00:07"),
@@ -90,6 +97,7 @@ def main():
                 ("Vishay", 1),
                 ("Anker", 1),
                 ("SK Hynix", 1),
+                # Retailers:
                 ("Best Buy", 2),
                 ("Microcenter", 2),
                 ("Fry's Electronics", 2),
@@ -117,22 +125,29 @@ def main():
                      ("Magnets", 134, 0.11),
                      ("Gyroscope Sensor", 693, 0.20),
                      ("Accelerometer", 908, 0.19),
-                     ("NFC Sensor", 1228, 0.17),
+                     ("NFC Sensor", 128, 0.17),
                      ("Box", 60937, 0.02),
                      ("Cable", 9573, 0.02),
                      ("RAM", 1855, 1.27)]
     
-    orderData = [("2026-02-23", 1, 1,20, 9.60),
-                 ("2026-02-16", 3, 2, 30, 3.60),
-                 ("2026-01-31", 8, 1, 23, 8.05),
-                 ("2026-03-02", 10, 4, 32, 13.44),
-                 ("2026-02-21", 15, 8, 33, 6.27),
-                 ("2026-03-12", 16, 8, 42, 7.98),
-                 ("2026-03-09", 19, 14, 52, 4.68),
-                 ("2026-04-01", 20, 13, 27, 2.97),
-                 ("2026-04-30", 21, 9, 54, 10.80),
-                 ("2026-01-10", 22, 9, 21, 3.99),
-                 ("2026-04-30", 23, 9, 35, 5.95)]
+    # Date, pID, totalCost
+    orderData = [("2026-02-23", 14, 108.45),
+                 ("2026-02-16", 8, 662.91),
+                 ("2026-01-31", 9, 554.14),
+                 ("2026-03-02", 13, 328.35),
+                 ("2026-02-21", 16, 4785.36),
+                 ]
+
+    # orderNumber, sku, productQuantity, itemCost 
+    orderDetailData = [(1, 19, 1205, 108.45),
+                       (2, 16, 1543, 293.17),
+                       (2, 15, 1946, 369.74),
+                       (3, 21, 947, 189.40),
+                       (3, 22, 285, 54.15),
+                       (3, 23, 1827, 310.59),
+                       (4, 20, 2958, 328.35),
+                       (5, 26, 3768, 4785.36)
+                       ]
 
     # Connect to DB & Create Cursor
     conn = sqlite3.connect('ERP Test.db')
@@ -153,14 +168,16 @@ def main():
     cursor.execute(createInventoryTable)
     cursor.execute(createPartyTable)
     cursor.execute(createOrdersTable)
+    cursor.execute(createOrderDetailsTable)
 
     # Insert Data
     cursor.executemany('INSERT INTO users (username, password, lastLogin) VALUES (?, ?, ?)', userData)
     cursor.executemany('INSERT INTO groups (role) VALUES (?)', groupData)
     cursor.executemany('INSERT INTO userToGroups (uID, gID) VALUES (?, ?)', userGroupData)
     cursor.executemany('INSERT INTO party (partyName, pType) VALUES (?, ?)', partyData)
-    cursor.executemany('INSERT INTO inventory (partName, currentAmount, pricePerUnit) VALUES (?, ?, ?)', inventoryData)
-    cursor.executemany('INSERT INTO orders (destinationDate, sku, pID, productAmount, orderCost) VALUES (?, ?, ?, ?, ?)', orderData)
+    cursor.executemany('INSERT INTO inventory (partName, quantity, pricePerUnit) VALUES (?, ?, ?)', inventoryData)
+    cursor.executemany('INSERT INTO orders (destinationDate, pID, totalCost) VALUES (?, ?, ?)', orderData)
+    cursor.executemany('INSERT INTO orderDetails (orderNumber, sku, productQuantity, itemCost) VALUES (?, ?, ?, ?)', orderDetailData)
 
     #Save changes
     conn.commit()
