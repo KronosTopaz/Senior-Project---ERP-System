@@ -8,6 +8,8 @@ def main():
     dropInventoryTable = ('DROP TABLE IF EXISTS inventory')
     dropPartyTable = ('DROP TABLE IF EXISTS party')
     dropOrderTable = ('DROP TABLE IF EXISTS orders')
+    dropRevenueTable = ('DROP TABLE IF EXISTS revenue')
+    dropExpenseTable = ('DROP TABLE IF EXISTS expense')
 
     # Create Table SQL
     createUserTable = ('''CREATE TABLE IF NOT EXISTS users
@@ -59,6 +61,22 @@ def main():
                                 FOREIGN KEY (orderNumber) REFERENCES orders(orderNumber),
                                 FOREIGN KEY (sku) REFERENCES inventory(sku)
                                 )''')
+    
+    createRevenueTable = ('''CREATE TABLE IF NOT EXISTS revenue
+                        (tID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        amount NUMERIC NOT NULL,
+                        timeRecorded DATETIME NOT NULL,
+                        pID INTEGER NOT NULL,
+                        FOREIGN KEY (pID) REFERENCES party(pID)
+                        )''')
+    
+    createExpenseTable = ('''CREATE TABLE IF NOT EXISTS expense
+                        (tID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        amount NUMERIC NOT NULL,
+                        timeRecorded DATETIME NOT NULL,
+                        pID INTEGER NOT NULL,
+                        FOREIGN KEY (pID) REFERENCES party(pID)
+                        )''')
     
     # Inserting Data
     userData = [("Jimmy", "I_Love_Working", "2026-01-01 13:00:07"),
@@ -147,6 +165,18 @@ def main():
                        (4, 20, 2958, 328.35),
                        (5, 26, 3768, 4785.36)
                        ]
+    
+    revenueData = [(120.54, "2026-01-05 09:03:01", 17),
+                   (221.40, "2026-01-09 12:25:27", 18),
+                   (324.98, "2026-01-09 13:28:54", 18),
+                   (635.63, "2026-01-11 22:38:41", 19),
+                   (50.12, "2026-01-11 22:47:11", 20)]
+    
+    expenseData = [(108.45, "2026-01-04 02:41:12", 1),
+                   (293.17, "2026-01-05 15:35:06", 2),
+                   (189.40, "2026-01-07 21:12:35", 3),
+                   (328.35, "2026-01-07 10:43:11", 4),
+                   (54.15, "2026-01-07 17:22:14", 3)]
 
     # Connect to DB & Create Cursor
     conn = sqlite3.connect('ERP Test.db')
@@ -159,6 +189,8 @@ def main():
     cursor.execute(dropInventoryTable)
     cursor.execute(dropPartyTable)
     cursor.execute(dropOrderTable)
+    cursor.execute(dropRevenueTable)
+    cursor.execute(dropExpenseTable)
 
     # Create tables
     cursor.execute(createUserTable)
@@ -168,6 +200,8 @@ def main():
     cursor.execute(createPartyTable)
     cursor.execute(createOrdersTable)
     cursor.execute(createOrderDetailsTable)
+    cursor.execute(createRevenueTable)
+    cursor.execute(createExpenseTable)
 
     # Insert Data
     cursor.executemany('INSERT INTO users (username, password, lastLogin) VALUES (?, ?, ?)', userData)
@@ -177,6 +211,8 @@ def main():
     cursor.executemany('INSERT INTO inventory (partName, quantity, pricePerUnit) VALUES (?, ?, ?)', inventoryData)
     cursor.executemany('INSERT INTO orders (destinationDate, pID, totalCost) VALUES (?, ?, ?)', orderData)
     cursor.executemany('INSERT INTO orderDetails (orderNumber, sku, productQuantity, itemCost) VALUES (?, ?, ?, ?)', orderDetailData)
+    cursor.executemany('INSERT INTO revenue (amount, timeRecorded, pID) VALUES (?, ?, ?)', revenueData)
+    cursor.executemany('INSERT INTO expense (amount, timeRecorded, pID) VALUES (?, ?, ?)', expenseData)
 
     #Save changes
     conn.commit()
