@@ -6,6 +6,10 @@ from tkinter import ttk
 from tkinter.ttk import *
 from ctypes import windll
 
+# Import MatplotLib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+
 # Import SQL Library
 import sqlite3
 
@@ -15,7 +19,7 @@ cursor = conn.cursor()
 
 # App window Qualities
 root = tk.Tk()
-
+# window = Tk()
 root.geometry("1000x500")
 root.resizable(True, True)
 root.title("ERP Application")
@@ -101,7 +105,43 @@ def createExpenseTable():
 
     expenseTable.grid(row=2, column=20, columnspan=3, sticky="nsew") 
 
+# Sales Projection
+def plot():
+    # the figure that will contain the plot
+    fig = Figure(figsize = (7, 5), dpi = 100)
+    
+    # Sales Data
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    sales = [7300, 6900, 6400, 5600, 5100, 5700, 5400, 4800, 3600, 4500, 5100, 3800]
+
+    # Add subplot
+    plot1 = fig.add_subplot(111)
+
+    # Plot graph
+    plot1.plot(months, sales, marker="o", linestyle="-", color="blue")
+
+    #Graph Labels
+    plot1.set_xlabel("Month")
+    plot1.set_ylabel("Sales ($)")
+    plot1.set_title("Monthly Sales Projection")
+    plot1.tick_params(axis="x", rotation=45)
+
+    # creating the Tkinter canvas
+    # containing the Matplotlib figure
+    canvas = FigureCanvasTkAgg(fig, master = root)  
+    canvas.draw()
+
+    # placing the canvas on the Tkinter window
+    canvas.get_tk_widget().grid(row=30, column=10)
+
+    # creating the Matplotlib toolbar
+    toolbarFrame = tk.Frame(root)
+    toolbarFrame.grid(row=20, column=10)
+    toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+    toolbar.update()
+
 # Run App
 createRevenueTable()
 createExpenseTable()
+plot()
 root.mainloop()
