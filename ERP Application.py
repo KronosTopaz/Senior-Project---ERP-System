@@ -24,21 +24,36 @@ root.geometry("1000x500")
 root.resizable(True, True)
 root.title("ERP Application")
 
+# Frames
+# Sidebar
+sidebarFrame = tk.Frame(root, width=200)
+sidebarFrame.grid(row=0, column=0, sticky="ns")
+
+# Main Window
+mainFrame = tk.Frame(root)
+mainFrame.grid(row=0, column=1, sticky="nsew")
+root.grid_columnconfigure(1, weight=1)
+root.grid_rowconfigure(0, weight=1)
+
 # App Widgets
-# Button
-dashboardButton = ttk.Button(root, text="Dashboard", compound=tk.LEFT)
-dashboardButton.grid(row=1, column=1, sticky=W, pady=2, padx=5)
+# Sidebar Button
+dashboardButton = ttk.Button(sidebarFrame, text="Dashboard")
+dashboardButton.pack(fill="x", pady=5)
 
-updateInventoryButton = ttk.Button(root, text="Update Inventory and Orders", compound=tk.LEFT)
-updateInventoryButton.grid(row=10, column=1, sticky=W, pady=2, padx=5)
+updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders")
+updateInventoryButton.pack(fill="x", pady=5)
 
-updateFinancialButton = ttk.Button(root, text="Update Financials", compound=tk.LEFT)
-updateFinancialButton.grid(row=20, column=1, sticky=W, pady=2, padx=5)
+updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials")
+updateFinancialButton.pack(fill="x", pady=5)
 
 # Tables
+# Frame for Tables
+tablesFrame = tk.Frame(mainFrame)
+tablesFrame.pack(fill="both", expand=True)
+
 # Table Definitions
-revenueTable = ttk.Treeview(root)
-expenseTable = ttk.Treeview(root)
+revenueTable = ttk.Treeview(tablesFrame)
+expenseTable = ttk.Treeview(tablesFrame)
 retailTable = ttk.Treeview(root)
 supplierTable = ttk.Treeview(root)
 orderTable = ttk.Treeview(root)
@@ -62,7 +77,7 @@ def createRevenueTable():
     cursor.execute('SELECT * FROM revenue')
     data = cursor.fetchall()
 
-    revenueTable.tag_configure('oddrow', background="#A4A4A4")
+    revenueTable.tag_configure('oddrow', background="#EBEBEB")
     revenueTable.tag_configure('evenrow', background="#C8C8C8")
 
     # Add data to Revenue Table
@@ -72,7 +87,8 @@ def createRevenueTable():
         else:
             revenueTable.insert(parent='', index=i, values=data[i], tags=('oddrow',))
 
-    revenueTable.grid(row=2, column=10, columnspan=3, sticky="nsew")
+    revenueTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+    tablesFrame.grid_columnconfigure(0, weight=1)
 
 def createExpenseTable():
     # Assign Table Columns
@@ -93,7 +109,7 @@ def createExpenseTable():
     cursor.execute('SELECT * FROM expense')
     data = cursor.fetchall()
 
-    expenseTable.tag_configure('oddrow', background="#A4A4A4")
+    expenseTable.tag_configure('oddrow', background="#EBEBEB")
     expenseTable.tag_configure('evenrow', background="#C8C8C8")
 
     # Add data to Revenue Table
@@ -103,9 +119,13 @@ def createExpenseTable():
         else:
             expenseTable.insert(parent='', index=i, values=data[i], tags=('oddrow',))
 
-    expenseTable.grid(row=2, column=20, columnspan=3, sticky="nsew") 
+    expenseTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+    tablesFrame.grid_columnconfigure(1, weight=1)
 
-# Sales Projection
+# Sales Projection Graph
+# Graph Frame
+salesGraphFrame = tk.Frame(mainFrame)
+salesGraphFrame.pack(fill="both", expand=True, pady=10)
 def plot():
     # the figure that will contain the plot
     fig = Figure(figsize = (7, 5), dpi = 100)
@@ -128,16 +148,16 @@ def plot():
 
     # creating the Tkinter canvas
     # containing the Matplotlib figure
-    canvas = FigureCanvasTkAgg(fig, master = root)  
+    canvas = FigureCanvasTkAgg(fig, master = salesGraphFrame)  
     canvas.draw()
 
     # placing the canvas on the Tkinter window
-    canvas.get_tk_widget().grid(row=30, column=10)
+    canvas.get_tk_widget().pack(fill="both", expand=True)
 
     # creating the Matplotlib toolbar
-    toolbarFrame = tk.Frame(root)
-    toolbarFrame.grid(row=20, column=10)
-    toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+    #toolbarFrame = tk.Frame(root)
+    #toolbarFrame.grid(row=20, column=10)
+    toolbar = NavigationToolbar2Tk(canvas, salesGraphFrame)
     toolbar.update()
 
 # Run App
