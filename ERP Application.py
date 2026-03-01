@@ -20,7 +20,7 @@ cursor = conn.cursor()
 # App window Qualities
 root = tk.Tk()
 # window = Tk()
-root.geometry("1000x500")
+root.geometry("1000x700")
 root.resizable(True, True)
 root.title("ERP Application")
 
@@ -36,7 +36,7 @@ root.grid_columnconfigure(1, weight=1)
 root.grid_rowconfigure(0, weight=1)
 
 # App Widgets
-# Sidebar Button
+# Sidebar Buttons
 dashboardButton = ttk.Button(sidebarFrame, text="Dashboard")
 dashboardButton.pack(fill="x", pady=5)
 
@@ -128,7 +128,7 @@ salesGraphFrame = tk.Frame(mainFrame)
 salesGraphFrame.pack(fill="both", expand=True, pady=10)
 def plot():
     # the figure that will contain the plot
-    fig = Figure(figsize = (7, 5), dpi = 100)
+    fig = Figure(figsize = (7,5), dpi = 100)
     
     # Sales Data
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -155,8 +155,6 @@ def plot():
     canvas.get_tk_widget().pack(fill="both", expand=True)
 
     # creating the Matplotlib toolbar
-    #toolbarFrame = tk.Frame(root)
-    #toolbarFrame.grid(row=20, column=10)
     toolbar = NavigationToolbar2Tk(canvas, salesGraphFrame)
     toolbar.update()
 
