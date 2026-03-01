@@ -51,13 +51,13 @@ class dashboardPage(tk.Frame):
         sidebarFrame.grid(row=0, column=0, sticky="ns")
 
         # Sidebar Buttons
-        #dashboardButton = ttk.Button(sidebarFrame, text="Dashboard")
+        #dashboardButton = ttk.Button(sidebarFrame, text="Dashboard", command=lambda: controller.showFrame("dashboardPage"))
         #dashboardButton.pack(fill="x", pady=5)
 
-        updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders")
+        updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders", command=lambda: controller.showFrame("inventoryPage"))
         updateInventoryButton.pack(fill="x", pady=5)
 
-        updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials")
+        updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials", command=lambda: controller.showFrame("financePage"))
         updateFinancialButton.pack(fill="x", pady=5)
 
         # Main Window
@@ -190,13 +190,13 @@ class inventoryPage(tk.Frame):
         sidebarFrame.grid(row=0, column=0, sticky="ns")
 
         # Sidebar Buttons
-        dashboardButton = ttk.Button(sidebarFrame, text="Dashboard")
+        dashboardButton = ttk.Button(sidebarFrame, text="Dashboard", command=lambda: controller.showFrame("dashboardPage"))
         dashboardButton.pack(fill="x", pady=5)
 
-        #updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders")
+        #updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders", command=lambda: controller.showFrame("inventoryPage"))
         #updateInventoryButton.pack(fill="x", pady=5)
 
-        updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials")
+        updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials", command=lambda: controller.showFrame("financePage"))
         updateFinancialButton.pack(fill="x", pady=5)
 
         # Main Window
@@ -215,13 +215,13 @@ class financePage(tk.Frame):
         sidebarFrame.grid(row=0, column=0, sticky="ns")
 
         # Sidebar Buttons
-        dashboardButton = ttk.Button(sidebarFrame, text="Dashboard")
+        dashboardButton = ttk.Button(sidebarFrame, text="Dashboard", command=lambda: controller.showFrame("dashboardPage"))
         dashboardButton.pack(fill="x", pady=5)
 
-        updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders")
+        updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders", command=lambda: controller.showFrame("inventoryPage"))
         updateInventoryButton.pack(fill="x", pady=5)
 
-        #updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials")
+        #updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials", command=lambda: controller.showFrame("financePage"))
         #updateFinancialButton.pack(fill="x", pady=5)
 
         # Main Window
