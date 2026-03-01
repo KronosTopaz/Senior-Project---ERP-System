@@ -230,6 +230,90 @@ class financePage(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # Table SubFrame
+        tablesFrame = tk.Frame(mainFrame)
+        tablesFrame.pack(fill="both", expand=True)
+
+        # Tables Defined
+        revenueTable = ttk.Treeview(tablesFrame)
+        expenseTable = ttk.Treeview(tablesFrame)
+        
+        
+        # region - Create Retailer Revenue Table
+            # Assign Table Columns
+        revenueTable['columns'] = ('Retailer', 'tID', 'Amount', 'Time')
+        revenueTable.column('#0', width=0, stretch=tk.NO)
+        revenueTable.column('Retailer', anchor=tk.W, width=100)
+        revenueTable.column('tID', anchor=tk.W, width=100)
+        revenueTable.column('Amount', anchor=tk.W, width=60)
+        revenueTable.column('Time', anchor=tk.W, width=125)
+
+        # Create Table headers
+        revenueTable.heading('#0', text="", anchor=tk.W)
+        revenueTable.heading('Retailer', text="Retailer", anchor=tk.W)
+        revenueTable.heading('tID', text="Transaction ID", anchor=tk.W)
+        revenueTable.heading('Amount', text="Amount", anchor=tk.W)
+        revenueTable.heading('Time', text="Time Recorded", anchor=tk.W)
+
+        retailerQuery = '''SELECT party.partyName, revenue.tID, revenue.amount, revenue.timeRecorded
+                    FROM revenue
+                    JOIN party ON revenue.pID = party.pID'''
+        cursor.execute(retailerQuery)
+        revenueData = cursor.fetchall()
+
+        revenueTable.tag_configure('oddrow', background="#EBEBEB")
+        revenueTable.tag_configure('evenrow', background="#C8C8C8")
+
+        # Add data to Revenue Table
+        for i in range(len(revenueData)):
+            if i % 2:
+                revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('evenrow',))
+            else:
+                revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('oddrow',))
+
+        revenueTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        tablesFrame.grid_columnconfigure(0, weight=1)
+        # endregion
+
+        
+        # region - Create Supplier Expense Table
+            # Assign Table Columns
+        expenseTable['columns'] = ('Supplier', 'tID', 'Amount', 'Time')
+        expenseTable.column('#0', width=0, stretch=tk.NO)
+        expenseTable.column('Supplier', anchor=tk.W, width=100)
+        expenseTable.column('tID', anchor=tk.W, width=100)
+        expenseTable.column('Amount', anchor=tk.W, width=60)
+        expenseTable.column('Time', anchor=tk.W, width=125)
+
+        # Create Table headers
+        expenseTable.heading('#0', text="", anchor=tk.W)
+        expenseTable.heading('Supplier', text="Supplier", anchor=tk.W)
+        expenseTable.heading('tID', text="Transaction ID", anchor=tk.W)
+        expenseTable.heading('Amount', text="Amount", anchor=tk.W)
+        expenseTable.heading('Time', text="Time Recorded", anchor=tk.W)
+
+        supplierQuery = '''SELECT party.partyName, expense.tID, expense.amount, expense.timeRecorded
+                    FROM expense
+                    JOIN party ON expense.pID = party.pID'''
+
+        cursor.execute(supplierQuery)
+        data = cursor.fetchall()
+
+        expenseTable.tag_configure('oddrow', background="#EBEBEB")
+        expenseTable.tag_configure('evenrow', background="#C8C8C8")
+
+        # Add data to Revenue Table
+        for i in range(len(data)):
+            if i % 2:
+                expenseTable.insert(parent='', index=i, values=data[i], tags=('evenrow',))
+            else:
+                expenseTable.insert(parent='', index=i, values=data[i], tags=('oddrow',))
+
+        expenseTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        tablesFrame.grid_columnconfigure(1, weight=1)
+        # endregion
+
+
 #----
 # Main
 App = app()
