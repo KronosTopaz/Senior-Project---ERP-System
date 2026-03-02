@@ -5,6 +5,7 @@ from tkinter.messagebox import showinfo
 from tkinter import ttk
 from tkinter.ttk import *
 from ctypes import windll
+from tkcalendar import Calendar
 
 # Import MatplotLib Library
 from matplotlib.figure import Figure
@@ -274,7 +275,6 @@ class financePage(tk.Frame):
         revenueTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         tablesFrame.grid_columnconfigure(0, weight=1)
         # endregion
-
         
         # region - Create Supplier Expense Table
             # Assign Table Columns
@@ -313,6 +313,49 @@ class financePage(tk.Frame):
         tablesFrame.grid_columnconfigure(1, weight=1)
         # endregion
 
+        # region - Input Frame
+        inputFrame = tk.Frame(mainFrame)
+        inputFrame.pack(fill="both", expand=True, pady=10)
+
+        tk.Label(inputFrame, text="Add a new transaction", pady=10).pack()
+        
+        #Dropdown Selection
+        tk.Label(inputFrame, text="Retail or Supplier transaction?").pack()
+        
+        partyOptions = ["Retailer", "Supplier"]
+        selectedValue = StringVar(value="Retailer")
+        tk.OptionMenu(inputFrame, selectedValue, *partyOptions).pack()
+        
+        # Input a number
+        tk.Label(inputFrame, text="Amount:").pack()
+        amountInput = tk.Entry(inputFrame)
+        amountInput.pack()
+
+        # Input a Date & Time
+        tk.Label(inputFrame, text="Select a date").pack()
+        cal = Calendar(inputFrame, selectmode='day')
+        cal.pack()
+
+        tk.Label(inputFrame, text="Enter a time (Format: HH:MM:SS)").pack()
+        timeInput = tk.Entry(inputFrame)
+        timeInput.pack()
+
+        # Add values to DB & table
+        def getTransaction():
+            # Grab Date & Time
+            dateOutput = cal.get_date()
+            timeOutput = timeInput.get()
+            
+            # Grab retailer or supplier
+            partyOutput = selectedValue.get()
+
+            # Grab dollar amount
+            amountOutput = amountInput.get()
+
+            print(f"Here are your values:\nParty: {partyOutput}\nAmount: {amountOutput}\nDate: {dateOutput}\nTime: {timeOutput}")
+        
+        tk.Button(inputFrame, text="Update", command = getTransaction).pack()
+        # endregion
 
 #----
 # Main
