@@ -322,8 +322,12 @@ class financePage(tk.Frame):
         #Dropdown Selection
         tk.Label(inputFrame, text="Retail or Supplier transaction?").pack()
         
-        partyOptions = ["Retailer", "Supplier"]
-        selectedValue = StringVar(value="Retailer")
+        partyOptions = ["Samsung", "TSMC", "Qualcomm", "LG", "Foxconn", "Arduino", "AAC Technologies",
+                        "AKG", "InvenSense Inc.", "EEJA LTD.", "Innovatronix", "Behringer",
+                        "Agood Company, Vishay", "Anker", "SK Hynix", "Packlane", "Best Buy",
+                        "Microcenter", "Fry's Electronics", "Radioshack"]
+        
+        selectedValue = StringVar(value="Samsung")
         tk.OptionMenu(inputFrame, selectedValue, *partyOptions).pack()
         
         # Input a number
@@ -352,7 +356,8 @@ class financePage(tk.Frame):
             # Grab dollar amount
             amountOutput = amountInput.get()
 
-            print(f"Here are your values:\nParty: {partyOutput}\nAmount: {amountOutput}\nDate: {dateOutput}\nTime: {timeOutput}")
+            cursor.execute('''
+                            ''')
         
         tk.Button(inputFrame, text="Update", command = getTransaction).pack()
         # endregion

@@ -31,18 +31,20 @@ def main():
                             FOREIGN KEY (gID) REFERENCES groups(gID)
                             )''')
     
-    createInventoryTable = ('''CREATE TABLE IF NOT EXISTS inventory
-                            (sku INTEGER PRIMARY KEY AUTOINCREMENT,
-                            partName TEXT NOT NULL,
-                            quantity INTEGER NOT NULL,
-                            pricePerUnit REAL NOT NULL
-                            )''')
-    
     createPartyTable = ('''CREATE TABLE IF NOT EXISTS party
                         (pID INTEGER PRIMARY KEY AUTOINCREMENT,
                         partyName TEXT NOT NULL,
                         pType INTEGER NOT NULL
                         )''')
+    
+    createInventoryTable = ('''CREATE TABLE IF NOT EXISTS inventory
+                            (sku INTEGER PRIMARY KEY AUTOINCREMENT,
+                            partName TEXT NOT NULL,
+                            quantity INTEGER NOT NULL,
+                            pricePerUnit REAL NOT NULL,
+                            pID INTEGER NOT NULL,
+                            FOREIGN KEY (pID) REFERENCES party(pID)
+                            )''')
     
     createOrdersTable = ('''CREATE TABLE IF NOT EXISTS orders
                          (orderNumber INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -114,38 +116,39 @@ def main():
                 ("Vishay", 1),
                 ("Anker", 1),
                 ("SK Hynix", 1),
+                ("Packlane", 1),
                 # Retailers:
                 ("Best Buy", 2),
                 ("Microcenter", 2),
                 ("Fry's Electronics", 2),
                 ("Radioshack", 2)]
     
-    inventoryData = [("Battery", 10038, 0.48),
-                     ("CPU", 25740, 0.68),
-                     ("Motherboard", 7058, 0.12),
-                     ("Screen", 39490, 0.26),
-                     ("Power Button", 24291, 0.10),
-                     ("Volume Rocker", 21503, 0.12),
-                     ("Frame", 43047, 0.43),
-                     ("Back Glass", 17412, 0.35),
-                     ("Wide Camera", 21028, 0.41),
-                     ("Ultrawide Camera", 17371, 0.42),
-                     ("Telephoto Camera", 19129, 0.50),
-                     ("Front Camera", 34153, 0.39),
-                     ("USB-C Controller", 13791, 0.25),
-                     ("Camera Flash", 12837, 0.10),
-                     ("Speaker", 303, 0.19),
-                     ("Earpiece Speaker", 434, 0.19),
-                     ("Microphone", 43857, 0.15),
-                     ("Vibration Motor", 3232, 0.27),
-                     ("Wireless Charging Coil", 895, 0.09),
-                     ("Magnets", 134, 0.11),
-                     ("Gyroscope Sensor", 693, 0.20),
-                     ("Accelerometer", 908, 0.19),
-                     ("NFC Sensor", 128, 0.17),
-                     ("Box", 60937, 0.02),
-                     ("Cable", 9573, 0.02),
-                     ("RAM", 1855, 1.27)]
+    inventoryData = [("Battery", 10038, 0.48, 5),
+                     ("CPU", 25740, 0.68, 3),
+                     ("Motherboard", 7058, 0.12, 2),
+                     ("Screen", 39490, 0.26, 1),
+                     ("Power Button", 24291, 0.10, 10),
+                     ("Volume Rocker", 21503, 0.12, 10),
+                     ("Frame", 43047, 0.43, 4),
+                     ("Back Glass", 17412, 0.35, 1),
+                     ("Wide Camera", 21028, 0.41, 4),
+                     ("Ultrawide Camera", 17371, 0.42, 4),
+                     ("Telephoto Camera", 19129, 0.50, 4),
+                     ("Front Camera", 34153, 0.39, 4),
+                     ("USB-C Controller", 13791, 0.25, 10),
+                     ("Camera Flash", 12837, 0.10, 11),
+                     ("Speaker", 303, 0.19, 8),
+                     ("Earpiece Speaker", 434, 0.19, 8),
+                     ("Microphone", 43857, 0.15, 12),
+                     ("Vibration Motor", 3232, 0.27, 7),
+                     ("Wireless Charging Coil", 895, 0.09, 14),
+                     ("Magnets", 134, 0.11, 13),
+                     ("Gyroscope Sensor", 693, 0.20, 9),
+                     ("Accelerometer", 908, 0.19, 9),
+                     ("NFC Sensor", 128, 0.17, 9),
+                     ("Box", 60937, 0.02, 17),
+                     ("Cable", 9573, 0.02, 15),
+                     ("RAM", 1855, 1.27, 16)]
     
     # Date, pID, totalCost
     orderData = [("2026-02-23", 14, 108.45),
@@ -166,11 +169,11 @@ def main():
                        (5, 26, 3768, 4785.36)
                        ]
     
-    revenueData = [(120.54, "2026-01-05 09:03:01", 17),
-                   (221.40, "2026-01-09 12:25:27", 18),
-                   (324.98, "2026-01-09 13:28:54", 18),
-                   (635.63, "2026-01-11 22:38:41", 19),
-                   (50.12, "2026-01-11 22:47:11", 20)]
+    revenueData = [(120.54, "2026-01-05 09:03:01", 18),
+                   (221.40, "2026-01-09 12:25:27", 19),
+                   (324.98, "2026-01-09 13:28:54", 10),
+                   (635.63, "2026-01-11 22:38:41", 20),
+                   (50.12, "2026-01-11 22:47:11", 21)]
     
     expenseData = [(108.45, "2026-01-04 02:41:12", 1),
                    (293.17, "2026-01-05 15:35:06", 2),
@@ -208,7 +211,7 @@ def main():
     cursor.executemany('INSERT INTO groups (role) VALUES (?)', groupData)
     cursor.executemany('INSERT INTO userToGroups (uID, gID) VALUES (?, ?)', userGroupData)
     cursor.executemany('INSERT INTO party (partyName, pType) VALUES (?, ?)', partyData)
-    cursor.executemany('INSERT INTO inventory (partName, quantity, pricePerUnit) VALUES (?, ?, ?)', inventoryData)
+    cursor.executemany('INSERT INTO inventory (partName, quantity, pricePerUnit, pID) VALUES (?, ?, ?, ?)', inventoryData)
     cursor.executemany('INSERT INTO orders (destinationDate, pID, totalCost) VALUES (?, ?, ?)', orderData)
     cursor.executemany('INSERT INTO orderDetails (orderNumber, sku, productQuantity, itemCost) VALUES (?, ?, ?, ?)', orderDetailData)
     cursor.executemany('INSERT INTO revenue (amount, timeRecorded, pID) VALUES (?, ?, ?)', revenueData)
