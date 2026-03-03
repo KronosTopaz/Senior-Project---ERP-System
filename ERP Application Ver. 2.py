@@ -206,6 +206,48 @@ class inventoryPage(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # Table SubFrame
+        tablesFrame = tk.Frame(mainFrame)
+        tablesFrame.pack(fill="both", expand=True)
+
+        # Tables Defined
+        currInventoryTable = ttk.Treeview(tablesFrame)
+        orderdetailsTable = ttk.Treeview(tablesFrame)
+        
+        # region - Create Current Inventory Table
+            # Assign Table Columns
+        currInventoryTable['columns'] = ('Part', 'Quantity', 'Supplier')
+        currInventoryTable.column('#0', width=0, stretch=tk.NO)
+        currInventoryTable.column('Part', anchor=tk.W, width=100)
+        currInventoryTable.column('Quantity', anchor=tk.W, width=40)
+        currInventoryTable.column('Supplier', anchor=tk.W, width=100)
+
+        # Create Table headers
+        currInventoryTable.heading('#0', text="", anchor=tk.W)
+        currInventoryTable.heading('Part', text="Part", anchor=tk.W)
+        currInventoryTable.heading('Quantity', text="Quantity", anchor=tk.W)
+        currInventoryTable.heading('Supplier', text="Supplier", anchor=tk.W)
+
+        currInventoryQuery = '''SELECT inventory.partName, inventory.quantity, party.partyName, inventory.pID
+                    FROM inventory
+                    JOIN party ON inventory.pID = party.pID'''
+        cursor.execute(currInventoryQuery)
+        inventoryData = cursor.fetchall()
+
+        currInventoryTable.tag_configure('oddrow', background="#EBEBEB")
+        currInventoryTable.tag_configure('evenrow', background="#C8C8C8")
+
+        # Add data to Revenue Table
+        for i in range(len(inventoryData)):
+            if i % 2:
+                currInventoryTable.insert(parent='', index=i, values=inventoryData[i], tags=('evenrow',))
+            else:
+                currInventoryTable.insert(parent='', index=i, values=inventoryData[i], tags=('oddrow',))
+
+        currInventoryTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        tablesFrame.grid_columnconfigure(0, weight=1)
+        # endregion
+        
 class financePage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
