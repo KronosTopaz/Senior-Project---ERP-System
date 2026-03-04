@@ -8,6 +8,7 @@ def main():
     dropInventoryTable = ('DROP TABLE IF EXISTS inventory')
     dropPartyTable = ('DROP TABLE IF EXISTS party')
     dropOrderTable = ('DROP TABLE IF EXISTS orders')
+    dropOrderDetailTable = ('DROP TABLE IF EXISTS orderDetails')
     dropRevenueTable = ('DROP TABLE IF EXISTS revenue')
     dropExpenseTable = ('DROP TABLE IF EXISTS expense')
 
@@ -67,7 +68,7 @@ def main():
     createRevenueTable = ('''CREATE TABLE IF NOT EXISTS revenue
                         (tID INTEGER PRIMARY KEY AUTOINCREMENT,
                         amount NUMERIC NOT NULL,
-                        timeRecorded DATETIME NOT NULL,
+                        timeRecorded DATE NOT NULL,
                         pID INTEGER NOT NULL,
                         FOREIGN KEY (pID) REFERENCES party(pID)
                         )''')
@@ -75,7 +76,7 @@ def main():
     createExpenseTable = ('''CREATE TABLE IF NOT EXISTS expense
                         (tID INTEGER PRIMARY KEY AUTOINCREMENT,
                         amount NUMERIC NOT NULL,
-                        timeRecorded DATETIME NOT NULL,
+                        timeRecorded DATE NOT NULL,
                         pID INTEGER NOT NULL,
                         FOREIGN KEY (pID) REFERENCES party(pID)
                         )''')
@@ -169,17 +170,17 @@ def main():
                        (5, 26, 3768, 4785.36)
                        ]
     
-    revenueData = [(120.54, "2026-01-05 09:03:01", 18),
-                   (221.40, "2026-01-09 12:25:27", 19),
-                   (324.98, "2026-01-09 13:28:54", 21),
-                   (635.63, "2026-01-11 22:38:41", 20),
-                   (50.12, "2026-01-11 22:47:11", 21)]
+    revenueData = [(120.54, "2026-01-05", 18),
+                   (221.40, "2026-01-09", 19),
+                   (324.98, "2026-01-09", 21),
+                   (635.63, "2026-01-11", 20),
+                   (50.12, "2026-01-11", 21)]
     
-    expenseData = [(108.45, "2026-01-04 02:41:12", 1),
-                   (293.17, "2026-01-05 15:35:06", 2),
-                   (189.40, "2026-01-07 21:12:35", 3),
-                   (328.35, "2026-01-07 10:43:11", 4),
-                   (54.15, "2026-01-07 17:22:14", 3)]
+    expenseData = [(108.45, "2026-01-04", 1),
+                   (293.17, "2026-01-05", 2),
+                   (189.40, "2026-01-07", 3),
+                   (328.35, "2026-01-07", 4),
+                   (54.15, "2026-01-07", 3)]
 
     # Connect to DB & Create Cursor
     conn = sqlite3.connect('ERP Test.db')
@@ -192,6 +193,7 @@ def main():
     cursor.execute(dropInventoryTable)
     cursor.execute(dropPartyTable)
     cursor.execute(dropOrderTable)
+    cursor.execute(dropOrderDetailTable)
     cursor.execute(dropRevenueTable)
     cursor.execute(dropExpenseTable)
 

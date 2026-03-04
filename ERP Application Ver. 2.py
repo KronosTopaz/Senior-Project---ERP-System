@@ -247,6 +247,48 @@ class inventoryPage(tk.Frame):
         currInventoryTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         tablesFrame.grid_columnconfigure(0, weight=1)
         # endregion
+
+        # region - Add a new order
+        inputFrame = tk.Frame(mainFrame)
+        inputFrame.pack(fill="both", expand=True, pady=10)
+
+        tk.Label(inputFrame, text="Add a new order", pady=10).pack()
+        
+        #Select mode
+        partOptions = ["Battery", "CPU", "Motherboard", "Screen", "Power Button", "Volume Rocker", "Frame",
+                        "Back Glass", "Wide Camera", "Ultrawide Camera", "Telephoto Camera", "Front Camera",
+                        "USB-C Controller", "Camera flash", "Speaker", "Earpiece Speaker", "Microphone", "Vibration Motor",
+                        "Wireless Charging Coil", "Magnets", "Gyroscope Sensor", "Accelerometer", "NFC Sensor", "Box",
+                        "Charging Cable", "RAM"]
+        
+        retailerOptions = ["Best Buy", "Fry's Electronics", "Microcenter", "Radioshack"]
+
+        def OrderMode():
+            for widget in dropdownFrame.winfo_children():
+                widget.destroy()
+                
+            mode = selectedMode.get()
+
+            if mode == "Buying parts":
+                selectedPart = StringVar(value="Battery")
+                tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack()
+            elif mode == "Shipping phones":
+                selectedPart = StringVar(value="Best Buy")
+                tk.OptionMenu(dropdownFrame, selectedPart, *retailerOptions).pack()
+
+        modeOptions = ["Buying parts", "Shipping phones"]
+        selectedMode = tk.StringVar(value="Buying parts")
+
+        for choice in modeOptions:
+            tk.Radiobutton(inputFrame, text=choice, value=choice, variable=selectedMode).pack(anchor=tk.W)
+
+        tk.Button(inputFrame, text="Select mode", command=OrderMode).pack()
+        
+        # Dropdown menu frame
+        dropdownFrame = tk.Frame(inputFrame)
+        dropdownFrame.pack(pady=10)
+
+        # endregion
         
 class financePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -382,15 +424,15 @@ class financePage(tk.Frame):
         cal = Calendar(inputFrame, selectmode='day')
         cal.pack()
 
-        tk.Label(inputFrame, text="Enter a time (Format: HH:MM:SS)").pack()
-        timeInput = tk.Entry(inputFrame)
-        timeInput.pack()
+        #tk.Label(inputFrame, text="Enter a time (Format: HH:MM:SS)").pack()
+        #timeInput = tk.Entry(inputFrame)
+        #timeInput.pack()
 
         # Add values to DB & table
         def getTransaction():
             # Grab Date & Time
             dateOutput = cal.get_date()
-            timeOutput = timeInput.get()
+            #timeOutput = timeInput.get()
             
             # Grab retailer or supplier
             partyOutput = selectedValue.get()
