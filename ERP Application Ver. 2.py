@@ -254,39 +254,72 @@ class inventoryPage(tk.Frame):
 
         tk.Label(inputFrame, text="Add a new order", pady=10).pack()
         
-        #Select mode
-        partOptions = ["Battery", "CPU", "Motherboard", "Screen", "Power Button", "Volume Rocker", "Frame",
-                        "Back Glass", "Wide Camera", "Ultrawide Camera", "Telephoto Camera", "Front Camera",
-                        "USB-C Controller", "Camera flash", "Speaker", "Earpiece Speaker", "Microphone", "Vibration Motor",
-                        "Wireless Charging Coil", "Magnets", "Gyroscope Sensor", "Accelerometer", "NFC Sensor", "Box",
-                        "Charging Cable", "RAM"]
+        # Select mode
+        # Dropdown menu options
+        partOptions = []
+        parts = cursor.execute('''SELECT partName FROM inventory''')
+        for i in parts:
+            partOptions.append(i[0])
         
-        retailerOptions = ["Best Buy", "Fry's Electronics", "Microcenter", "Radioshack"]
+        retailerOptions = []
+        retailers = cursor.execute('''SELECT partyName FROM party WHERE pType = 2''')
+        for i in retailers:
+            retailerOptions.append(i[0])
 
-        def OrderMode():
+        # Changing dropdown menus
+        #def OrderMode():
+            #for widget in dropdownFrame.winfo_children():
+            #    widget.destroy()
+                
+            #mode = selectedMode.get()
+
+            #if mode == "Buying parts":
+            #    selectedPart = StringVar(value="Battery")
+            #    tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack()
+            #elif mode == "Shipping phones":
+            #    selectedPart = StringVar(value="Best Buy")
+            #    tk.OptionMenu(dropdownFrame, selectedPart, *retailerOptions).pack()
+
+        def orderPartSelected():
             for widget in dropdownFrame.winfo_children():
                 widget.destroy()
-                
-            mode = selectedMode.get()
+            selectedPart = StringVar(value="Battery")
+            tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack(anchor=tk.W)
 
-            if mode == "Buying parts":
-                selectedPart = StringVar(value="Battery")
-                tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack()
-            elif mode == "Shipping phones":
-                selectedPart = StringVar(value="Best Buy")
-                tk.OptionMenu(dropdownFrame, selectedPart, *retailerOptions).pack()
+        def shipPhoneSelected():
+            for widget in dropdownFrame.winfo_children():
+                widget.destroy()
+            selectedPart = StringVar(value="Best Buy")
+            tk.OptionMenu(dropdownFrame, selectedPart, *retailerOptions).pack(anchor=tk.W)
+            
+        # Radiobutton options
+        #modeOptions = ["Buying parts", "Shipping phones"]
+        #selectedMode = tk.StringVar(value="Buying parts")
 
-        modeOptions = ["Buying parts", "Shipping phones"]
-        selectedMode = tk.StringVar(value="Buying parts")
+        # Create radiobuttons
+        #for choice in modeOptions:
+            #tk.Radiobutton(inputFrame, text=choice, value=choice, variable=selectedMode).pack(anchor=tk.W)
 
-        for choice in modeOptions:
-            tk.Radiobutton(inputFrame, text=choice, value=choice, variable=selectedMode).pack(anchor=tk.W)
-
-        tk.Button(inputFrame, text="Select mode", command=OrderMode).pack()
+        # Button to confirm mode
+        tk.Button(inputFrame, text="Order Parts", command=orderPartSelected).pack(anchor=tk.W)
+        tk.Button(inputFrame, text="Shipping Phones", command=shipPhoneSelected).pack(anchor=tk.W)
         
         # Dropdown menu frame
         dropdownFrame = tk.Frame(inputFrame)
-        dropdownFrame.pack(pady=10)
+        dropdownFrame.pack(pady=10, anchor=tk.W)
+
+        # Enter amount:
+        tk.Label(inputFrame, text="Quantity:").pack(anchor=tk.W)
+        amountInput = tk.Entry(inputFrame)
+        amountInput.pack()
+
+        # Enter order arrival date
+        tk.Label(inputFrame, text="When will the order arrive?").pack(pady=5)
+        cal = Calendar(inputFrame, selectmode='day')
+        cal.pack()
+
+        # Button to confirm order
+        tk.Button(inputFrame, text="Confirm Order").pack()
 
         # endregion
         
