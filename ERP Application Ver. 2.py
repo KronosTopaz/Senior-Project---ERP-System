@@ -6,6 +6,7 @@ from tkinter import ttk
 from tkinter.ttk import *
 from ctypes import windll
 from tkcalendar import Calendar
+from datetime import datetime, timedelta
 
 # Import MatplotLib Library
 from matplotlib.figure import Figure
@@ -251,17 +252,21 @@ class inventoryPage(tk.Frame):
 
         # region - Create Cart Table
         # Assign Table Columns
-        cartTable['columns'] = ('Item', 'Quantity', 'Subtotal')
+        cartTable['columns'] = ('Item', 'Quantity', 'Subtotal', 'Company', 'Arrival Date')
         cartTable.column('#0', width=0, stretch=tk.NO)
         cartTable.column('Item', anchor=tk.W, width=110)
         cartTable.column('Quantity', anchor=tk.W, width=70)
         cartTable.column('Subtotal', anchor=tk.W, width=100)
+        cartTable.column('Company', anchor=tk.W, width=100)
+        cartTable.column('Arrival Date', anchor=tk.W, width=100)
 
         # Create Table headers
         cartTable.heading('#0', text="", anchor=tk.W)
         cartTable.heading('Item', text="Item", anchor=tk.W)
         cartTable.heading('Quantity', text="Quantity", anchor=tk.W)
         cartTable.heading('Subtotal', text="Subtotal ($)", anchor=tk.W)
+        cartTable.heading('Company', text="Company", anchor=tk.W)
+        cartTable.heading('Arrival Date', text="Arrival Date", anchor=tk.W)
 
         cartTable.tag_configure('oddrow', background="#EBEBEB")
         cartTable.tag_configure('evenrow', background="#C8C8C8")
@@ -279,7 +284,7 @@ class inventoryPage(tk.Frame):
         # Select mode
         # Dropdown menu options
         partOptions = []
-        parts = cursor.execute('''SELECT partName FROM inventory''')
+        parts = cursor.execute('''SELECT partName FROM inventory WHERE sku < (SELECT MAX(sku) FROM inventory)''')
         for i in parts:
             partOptions.append(i[0])
         
@@ -287,10 +292,15 @@ class inventoryPage(tk.Frame):
         retailers = cursor.execute('''SELECT partyName FROM party WHERE pType = 2''')
         for i in retailers:
             retailerOptions.append(i[0])
+        
+        # Bill of Materials
+        bom = {part: 1 for part in partOptions if part != "Completed Phone"}
+        bom["Microphone"] = 2
+        bom["Magnets"] = 2
 
-        # Changing dropdown menus
+        # Dropdown menus
         # Default mode
-        mode = "Parts"
+        mode = tk.StringVar(value="Parts")
 
         # Default value selected
         selectedPart = StringVar(value="Battery")
@@ -298,20 +308,18 @@ class inventoryPage(tk.Frame):
         
         # Functions to change dropdown menu
         def orderPartSelected():
-            global mode
-            mode = "Parts"
+            mode.set("Parts")
             for widget in dropdownFrame.winfo_children():
                 widget.destroy()
             tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack(anchor=tk.W)
 
         def shipPhoneSelected():
-            global mode
-            mode = "Phones"
+            mode.set("Phones")
             for widget in dropdownFrame.winfo_children():
                 widget.destroy()
             tk.OptionMenu(dropdownFrame, selectedRetailer, *retailerOptions).pack(anchor=tk.W)
 
-        # Add values to cart table
+        # Add values to Cart Table
         def createOrder():          
             # Grab quantity
             quantity = amountInput.get()
@@ -321,18 +329,64 @@ class inventoryPage(tk.Frame):
                 return
 
             # Grab Item Name or use phone inventory depending on selected mode
-            if mode == "Parts":
+            if mode.get() == "Parts":
                 itemName = selectedPart.get()
-            elif mode == "Phones":
+
+                # Look up supplier name for selected part
+                cursor.execute('''SELECT party.partyName FROM inventory JOIN party ON inventory.pID = party.pID WHERE inventory.partName = ?''', (itemName,))
+                supplierResult = cursor.fetchone()
+                # Check if it is a valid value
+                if supplierResult:
+                    companyName = supplierResult[0]
+                
+                # Estimated arrival date
+                arrivalDate = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
+
+            elif mode.get() == "Phones":
                 itemName = "Completed Phone"
+                # Grab retailer name
+                companyName = selectedRetailer.get()
+                
+                # See if phone quantity is sufficient
+                cursor.execute('''SELECT quantity FROM inventory WHERE partName = ?''', (itemName,))
+                currentPhoneInventory = cursor.fetchone()[0]
+                
+                # List of parts that are low & need to be reordered
+                partShortage = []
+
+                # Checks if current inventory is enough to fulfill retailer order
+                if currentPhoneInventory >= quantity:
+                    daysToArrive = 9
+
+                # If not, calculate number of phones needed and see if any parts are short for assembly
+                else:
+                    phonesNeeded = quantity-currentPhoneInventory
+                    shortageFound = False
+
+                    for part, multiplier in bom.items():
+                        partsNeeded = phonesNeeded * multiplier
+                        cursor.execute('''SELECT quantity FROM inventory WHERE partName = ?''', (part,))
+                        partInventory = cursor.fetchone()[0]
+
+                        if partInventory < partsNeeded:
+                            deficit = partsNeeded - partInventory
+                            partShortage.append(f"{part} (Short: {deficit})")
+
+                    if shortageFound:
+                        daysToArrive = 44
+                    else:
+                        daysToArrive = 29
+
+                # Estimated arrival date
+                arrivalDate = (datetime.now() + timedelta(days=daysToArrive)).strftime('%Y-%m-%d')
             
-            # Dollar cost
+            # Calculate dollar cost
             cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (itemName,))
             result = cursor.fetchone()
 
             if result:
                 unitCost = result[0]
-                subtotal = unitCost * int(quantity)
+                subtotal = round((unitCost * int(quantity)), 2)
                 
                 # Checks what row number is next
                 currentItemRow = len(cartTable.get_children())
@@ -342,7 +396,7 @@ class inventoryPage(tk.Frame):
                     rowTag = 'oddrow'
                 
                 # Add item to table
-                cartTable.insert(parent='', index='end', values=(itemName, quantity, subtotal), tags=(rowTag))
+                cartTable.insert(parent='', index='end', values=(itemName, quantity, subtotal, companyName, arrivalDate), tags=(rowTag))
 
                 # Empty quantity input for next item
                 amountInput.delete(0, tk.END)
@@ -355,17 +409,13 @@ class inventoryPage(tk.Frame):
         dropdownFrame = tk.Frame(inputFrame)
         dropdownFrame.pack(pady=10, anchor=tk.W)
 
+        # Generate dropdown menu
         orderPartSelected()
 
         # Enter Quantity
         tk.Label(inputFrame, text="Quantity:").pack(anchor=tk.W)
         amountInput = tk.Entry(inputFrame)
         amountInput.pack(anchor=tk.W)
-
-        # Enter order arrival date
-        #tk.Label(inputFrame, text="When will the order arrive?").pack(pady=5)
-        #cal = Calendar(inputFrame, selectmode='day')
-        #cal.pack()
 
         # Button to confirm order
         tk.Button(inputFrame, text="Add to Cart", command=createOrder).pack()
