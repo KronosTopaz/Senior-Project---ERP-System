@@ -122,7 +122,9 @@ def main():
                 ("Best Buy", 2),
                 ("Microcenter", 2),
                 ("Fry's Electronics", 2),
-                ("Radioshack", 2)]
+                ("Radioshack", 2),
+                # Refers to the company the ERP system belongs to
+                ("Our Company", 3)]
     
     inventoryData = [("Battery", 10038, 0.48, 5),
                      ("CPU", 25740, 0.68, 3),
@@ -149,7 +151,8 @@ def main():
                      ("NFC Sensor", 128, 0.17, 9),
                      ("Box", 60937, 0.02, 17),
                      ("Cable", 9573, 0.02, 15),
-                     ("RAM", 1855, 1.27, 16)]
+                     ("RAM", 1855, 1.27, 16),
+                     ("Completed Phone", 0, 999.99, 22)]
     
     # Date, pID, totalCost
     orderData = [("2026-02-23", 14, 108.45),

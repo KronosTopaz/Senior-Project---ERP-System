@@ -213,14 +213,15 @@ class inventoryPage(tk.Frame):
         # Tables Defined
         currInventoryTable = ttk.Treeview(tablesFrame)
         orderdetailsTable = ttk.Treeview(tablesFrame)
+        cartTable = ttk.Treeview(tablesFrame)
         
         # region - Create Current Inventory Table
             # Assign Table Columns
         currInventoryTable['columns'] = ('Part', 'Quantity', 'Supplier')
         currInventoryTable.column('#0', width=0, stretch=tk.NO)
-        currInventoryTable.column('Part', anchor=tk.W, width=100)
+        currInventoryTable.column('Part', anchor=tk.W, width=50)
         currInventoryTable.column('Quantity', anchor=tk.W, width=40)
-        currInventoryTable.column('Supplier', anchor=tk.W, width=100)
+        currInventoryTable.column('Supplier', anchor=tk.W, width=50)
 
         # Create Table headers
         currInventoryTable.heading('#0', text="", anchor=tk.W)
@@ -248,6 +249,27 @@ class inventoryPage(tk.Frame):
         tablesFrame.grid_columnconfigure(0, weight=1)
         # endregion
 
+        # region - Create Cart Table
+        # Assign Table Columns
+        cartTable['columns'] = ('Item', 'Quantity', 'Subtotal')
+        cartTable.column('#0', width=0, stretch=tk.NO)
+        cartTable.column('Item', anchor=tk.W, width=50)
+        cartTable.column('Quantity', anchor=tk.W, width=60)
+        cartTable.column('Subtotal', anchor=tk.W, width=100)
+
+        # Create Table headers
+        cartTable.heading('#0', text="", anchor=tk.W)
+        cartTable.heading('Item', text="Item", anchor=tk.W)
+        cartTable.heading('Quantity', text="Quantity", anchor=tk.W)
+        cartTable.heading('Subtotal', text="Subtotal ($)", anchor=tk.W)
+
+        cartTable.tag_configure('oddrow', background="#EBEBEB")
+        cartTable.tag_configure('evenrow', background="#C8C8C8")
+
+        cartTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        tablesFrame.grid_columnconfigure(0, weight=1)
+        # endregion
+
         # region - Add a new order
         inputFrame = tk.Frame(mainFrame)
         inputFrame.pack(fill="both", expand=True, pady=10)
@@ -267,38 +289,58 @@ class inventoryPage(tk.Frame):
             retailerOptions.append(i[0])
 
         # Changing dropdown menus
-        #def OrderMode():
-            #for widget in dropdownFrame.winfo_children():
-            #    widget.destroy()
-                
-            #mode = selectedMode.get()
+        # Default mode
+        mode = "Parts"
 
-            #if mode == "Buying parts":
-            #    selectedPart = StringVar(value="Battery")
-            #    tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack()
-            #elif mode == "Shipping phones":
-            #    selectedPart = StringVar(value="Best Buy")
-            #    tk.OptionMenu(dropdownFrame, selectedPart, *retailerOptions).pack()
-
+        # Default value selected
+        selectedPart = StringVar(value="Battery")
+        selectedRetailer = StringVar(value="Best Buy")
+        
+        # Functions to change dropdown menu
         def orderPartSelected():
+            global mode
+            mode = "Parts"
             for widget in dropdownFrame.winfo_children():
                 widget.destroy()
-            selectedPart = StringVar(value="Battery")
             tk.OptionMenu(dropdownFrame, selectedPart, *partOptions).pack(anchor=tk.W)
 
         def shipPhoneSelected():
+            global mode
+            mode = "Phones"
             for widget in dropdownFrame.winfo_children():
                 widget.destroy()
-            selectedPart = StringVar(value="Best Buy")
-            tk.OptionMenu(dropdownFrame, selectedPart, *retailerOptions).pack(anchor=tk.W)
-            
-        # Radiobutton options
-        #modeOptions = ["Buying parts", "Shipping phones"]
-        #selectedMode = tk.StringVar(value="Buying parts")
+            tk.OptionMenu(dropdownFrame, selectedRetailer, *retailerOptions).pack(anchor=tk.W)
 
-        # Create radiobuttons
-        #for choice in modeOptions:
-            #tk.Radiobutton(inputFrame, text=choice, value=choice, variable=selectedMode).pack(anchor=tk.W)
+        # Add values to cart table
+        def createOrder():          
+            # Grab quantity
+            quantity = amountInput.get()
+
+            # Grab retailer or supplier
+            if mode == "Parts":
+                selectedDropdownOutput = selectedPart.get()
+
+                # Dollar cost
+                cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (selectedDropdownOutput,))
+                result = cursor.fetchone()
+
+                if result:
+                    unitCost = result[0]
+                    totalPartCost = unitCost * int(quantity)
+                    print(f"You selected {selectedDropdownOutput} and it will cost {totalPartCost}")
+            elif mode == "Phones":
+                selectedDropdownOutput = selectedRetailer.get()
+
+                # Dollar cost
+                cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (selectedDropdownOutput,))
+                result = cursor.fetchone()
+
+                if result:
+                    unitCost = result[0]
+                    totalPartCost = unitCost * int(quantity)
+
+
+            # Grab dollar amount
 
         # Button to confirm mode
         tk.Button(inputFrame, text="Order Parts", command=orderPartSelected).pack(anchor=tk.W)
@@ -308,18 +350,20 @@ class inventoryPage(tk.Frame):
         dropdownFrame = tk.Frame(inputFrame)
         dropdownFrame.pack(pady=10, anchor=tk.W)
 
-        # Enter amount:
+        orderPartSelected()
+
+        # Enter Quantity
         tk.Label(inputFrame, text="Quantity:").pack(anchor=tk.W)
         amountInput = tk.Entry(inputFrame)
         amountInput.pack()
 
         # Enter order arrival date
-        tk.Label(inputFrame, text="When will the order arrive?").pack(pady=5)
-        cal = Calendar(inputFrame, selectmode='day')
-        cal.pack()
+        #tk.Label(inputFrame, text="When will the order arrive?").pack(pady=5)
+        #cal = Calendar(inputFrame, selectmode='day')
+        #cal.pack()
 
         # Button to confirm order
-        tk.Button(inputFrame, text="Confirm Order").pack()
+        tk.Button(inputFrame, text="Add to Cart", command=createOrder).pack()
 
         # endregion
         
