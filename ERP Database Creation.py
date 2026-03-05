@@ -152,7 +152,7 @@ def main():
                      ("Box", 60937, 0.02, 17),
                      ("Cable", 9573, 0.02, 15),
                      ("RAM", 1855, 1.27, 16),
-                     ("Completed Phone", 0, 999.99, 22)]
+                     ("Completed Phone", 1000, 999.99, 22)]
     
     # Date, pID, totalCost
     orderData = [("2026-02-23", 14, 108.45),

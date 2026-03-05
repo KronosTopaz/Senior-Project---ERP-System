@@ -253,8 +253,8 @@ class inventoryPage(tk.Frame):
         # Assign Table Columns
         cartTable['columns'] = ('Item', 'Quantity', 'Subtotal')
         cartTable.column('#0', width=0, stretch=tk.NO)
-        cartTable.column('Item', anchor=tk.W, width=50)
-        cartTable.column('Quantity', anchor=tk.W, width=60)
+        cartTable.column('Item', anchor=tk.W, width=110)
+        cartTable.column('Quantity', anchor=tk.W, width=70)
         cartTable.column('Subtotal', anchor=tk.W, width=100)
 
         # Create Table headers
@@ -316,31 +316,36 @@ class inventoryPage(tk.Frame):
             # Grab quantity
             quantity = amountInput.get()
 
-            # Grab retailer or supplier
+            if not quantity.isdigit() or int(quantity) <= 0:
+                showinfo("Error", "You did not enter a valid value for Quantity")
+                return
+
+            # Grab Item Name or use phone inventory depending on selected mode
             if mode == "Parts":
-                selectedDropdownOutput = selectedPart.get()
-
-                # Dollar cost
-                cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (selectedDropdownOutput,))
-                result = cursor.fetchone()
-
-                if result:
-                    unitCost = result[0]
-                    totalPartCost = unitCost * int(quantity)
-                    print(f"You selected {selectedDropdownOutput} and it will cost {totalPartCost}")
+                itemName = selectedPart.get()
             elif mode == "Phones":
-                selectedDropdownOutput = selectedRetailer.get()
+                itemName = "Completed Phone"
+            
+            # Dollar cost
+            cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (itemName,))
+            result = cursor.fetchone()
 
-                # Dollar cost
-                cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (selectedDropdownOutput,))
-                result = cursor.fetchone()
+            if result:
+                unitCost = result[0]
+                subtotal = unitCost * int(quantity)
+                
+                # Checks what row number is next
+                currentItemRow = len(cartTable.get_children())
+                
+                rowTag = 'evenrow'
+                if currentItemRow % 2 != 0:
+                    rowTag = 'oddrow'
+                
+                # Add item to table
+                cartTable.insert(parent='', index='end', values=(itemName, quantity, subtotal), tags=(rowTag))
 
-                if result:
-                    unitCost = result[0]
-                    totalPartCost = unitCost * int(quantity)
-
-
-            # Grab dollar amount
+                # Empty quantity input for next item
+                amountInput.delete(0, tk.END)
 
         # Button to confirm mode
         tk.Button(inputFrame, text="Order Parts", command=orderPartSelected).pack(anchor=tk.W)
@@ -355,7 +360,7 @@ class inventoryPage(tk.Frame):
         # Enter Quantity
         tk.Label(inputFrame, text="Quantity:").pack(anchor=tk.W)
         amountInput = tk.Entry(inputFrame)
-        amountInput.pack()
+        amountInput.pack(anchor=tk.W)
 
         # Enter order arrival date
         #tk.Label(inputFrame, text="When will the order arrive?").pack(pady=5)
@@ -365,6 +370,13 @@ class inventoryPage(tk.Frame):
         # Button to confirm order
         tk.Button(inputFrame, text="Add to Cart", command=createOrder).pack()
 
+        # endregion
+
+        # region - Calculate new inventory amounts
+        def newInventoryAmount():
+            print()
+
+        tk.Button(inputFrame, text="Confirm Orders", command=newInventoryAmount).pack()
         # endregion
         
 class financePage(tk.Frame):
