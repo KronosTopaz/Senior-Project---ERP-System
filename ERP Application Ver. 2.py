@@ -333,6 +333,23 @@ class inventoryPage(tk.Frame):
             
             # Make quantity a int
             quantity = int(quantity_string)
+
+            # Make Cart Table aware of parts promised previously
+            cartIncoming = {}
+            cartPromised = {}
+            for child in cartTable.get_children():
+                rowValues = cartTable.item(child, 'values')
+                cartItemName = rowValues[0]
+                cartItemQty = int(rowValues[1])
+
+                if cartItemName == "Completed Phone":
+                    cartPromised[cartItemName] = cartPromised.get(cartItemName, 0) + cartItemQty
+                    
+                    for part, multiplier in bom.items():
+                        cartPromised[part] = cartPromised.get(part, 0) + (cartItemQty * multiplier)
+                
+                else:
+                    cartIncoming[cartItemName] = cartIncoming.get(cartItemName, 0) + cartItemQty
             
             # Grab Item Name or use phone inventory depending on selected mode
             if mode.get() == "Parts":
@@ -357,7 +374,10 @@ class inventoryPage(tk.Frame):
                 
                 # See if phone quantity is sufficient
                 cursor.execute('''SELECT quantity FROM inventory WHERE partName = ?''', (itemName,))
-                currentPhoneInventory = cursor.fetchone()[0]
+                db_PhoneInventory = cursor.fetchone()[0]
+
+                # Subtract phones promised in cart table
+                currentPhoneInventory = max(0, db_PhoneInventory + cartIncoming.get(itemName, 0) - cartPromised.get(itemName, 0))
                 
                 # List of parts that are low & need to be reordered
                 partShortage = []
@@ -375,7 +395,9 @@ class inventoryPage(tk.Frame):
                         cursor.execute('''SELECT quantity, pricePerUnit, pID FROM inventory WHERE partName = ?''', (part,))
                         partData = cursor.fetchone()
 
-                        partInventory = partData[0]
+                        db_PartInventory = partData[0]
+                        partInventory = max(0, db_PartInventory + cartIncoming.get(part, 0) - cartPromised.get(part, 0))
+                        
                         unit_cost = partData[1]
                         supplier_id = partData[2]
                         
