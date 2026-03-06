@@ -483,10 +483,93 @@ class inventoryPage(tk.Frame):
         # endregion
 
         # region - Calculate new inventory amounts
-        def newInventoryAmount():
-            print()
+        def confirmOrder():
+            # Check if cart is empty, display message if it is
+            if not cartTable.get_children():
+                messagebox.showinfo("No items", "The cart is empty")
+                return
+            
+            # Grab items from cart and add to a dictionary, grouped by company
+            ordersFromCompany = {}
 
-        tk.Button(inputFrame, text="Confirm Orders", command=newInventoryAmount).pack()
+            for child in cartTable.get_children():
+                # Get data in a row
+                rowValues = cartTable.item(child, 'values')
+
+                itemName = rowValues[0]
+                quantity = int(rowValues[1])
+                subtotal = float(rowValues[2])
+                companyName = rowValues[3]
+                arrivalDate = rowValues[4]
+
+                # If a company name isn't in the dictionary, add it in
+                if companyName not in ordersFromCompany:
+                    ordersFromCompany[companyName] = []
+                
+                # Adding items & details to where a company name shows up
+                ordersFromCompany[companyName].append({
+                    'Name' : itemName,
+                    'Quantity' : quantity,
+                    'Subtotal' : subtotal,
+                    'Date' : arrivalDate
+                })
+            
+            # Get today's date for finance table
+            today = datetime.now().strftime('%Y-%m-%d')
+
+            for company, items in ordersFromCompany.items():
+                # Grab Party ID and Party Type depending on company name
+                cursor.execute('''SELECT pID, pType FROM party WHERE partyName = ?''', (company,))
+                partyData = cursor.fetchone()
+                pID = partyData[0]
+                pType = partyData[1]
+
+                # Calculate the Total Cost and latest Arrival Date for the order
+                totalCost = sum(item['Subtotal'] for item in items)
+                orderDate = max(item['Date'] for item in items)
+
+                # Adding the order cost & date to the "orders" table
+                cursor.execute('''INSERT INTO orders (destinationDate, pID, totalCost) VALUES (?, ?, ?)''', (orderDate, pID, totalCost))
+
+                # Grab orderNumber primary key to add into "orderDetails" table
+                orderID = cursor.lastrowid
+
+                # Go through items and put into orderDetails
+                for item in items:
+                    # Find item SKU
+                    cursor.execute('''SELECT sku FROM inventory WHERE partName = ?''', (item['Name'],))
+                    sku = cursor.fetchone()[0]
+
+                    # Inserting into "orderDetails" table
+                    cursor.execute('''INSERT INTO orderDetails (orderNumber, sku, productQuantity, itemCost) VALUES (?, ?, ?, ?)''',
+                                   (orderID, sku, item['Quantity'], item['Subtotal']))
+                    
+                    # Updating Inventory table
+                    # If supplier, add parts to inventory
+                    if pType == 1:
+                        cursor.execute('UPDATE inventory SET quantity = quantity + ? WHERE sku = ?', (item['Quantity'], sku))
+                    # If retailer, subtract parts from inventory
+                    elif pType == 2:
+                        cursor.execute('UPDATE inventory SET quantity = quantity - ? WHERE sku = ?', (item['Quantity'], sku))
+                
+                # Update Revenue & Expense tables
+                # If Supplier, update Expense
+                if pType == 1:
+                    cursor.execute('INSERT INTO expense (amount, timeRecorded, pID) VALUES (?, ?, ?)', (totalCost, today, pID))
+                # If Retailer, update Revenue
+                elif pType == 2:
+                    cursor.execute('INSERT INTO revenue (amount, timeRecorded, pID) VALUES (?, ?, ?)', (totalCost, today, pID))
+            
+            # Save changes to DB
+            conn.commit()
+
+            # Clear cart table & display confirmation message
+            for child in cartTable.get_children():
+                cartTable.delete(child)
+            
+            messagebox.showinfo("Success", "All orders have been successfully updated in the database")        
+
+        tk.Button(inputFrame, text="Confirm Orders", command=confirmOrder).pack()
         # endregion
         
 class financePage(tk.Frame):
