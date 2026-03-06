@@ -6,6 +6,9 @@ from tkinter import ttk
 from tkinter.ttk import *
 from ctypes import windll
 from tkcalendar import Calendar
+from tkinter import messagebox
+
+# Import datetime library
 from datetime import datetime, timedelta
 
 # Import MatplotLib Library
@@ -322,12 +325,15 @@ class inventoryPage(tk.Frame):
         # Add values to Cart Table
         def createOrder():          
             # Grab quantity
-            quantity = amountInput.get()
+            quantity_string = amountInput.get()
 
-            if not quantity.isdigit() or int(quantity) <= 0:
+            if not quantity_string.isdigit() or int(quantity_string) <= 0:
                 showinfo("Error", "You did not enter a valid value for Quantity")
                 return
-
+            
+            # Make quantity a int
+            quantity = int(quantity_string)
+            
             # Grab Item Name or use phone inventory depending on selected mode
             if mode.get() == "Parts":
                 itemName = selectedPart.get()
@@ -342,8 +348,10 @@ class inventoryPage(tk.Frame):
                 # Estimated arrival date
                 arrivalDate = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
 
+            # region - Shipping phones to retailers
             elif mode.get() == "Phones":
                 itemName = "Completed Phone"
+                
                 # Grab retailer name
                 companyName = selectedRetailer.get()
                 
@@ -361,25 +369,55 @@ class inventoryPage(tk.Frame):
                 # If not, calculate number of phones needed and see if any parts are short for assembly
                 else:
                     phonesNeeded = quantity-currentPhoneInventory
-                    shortageFound = False
-
+                    
                     for part, multiplier in bom.items():
                         partsNeeded = phonesNeeded * multiplier
-                        cursor.execute('''SELECT quantity FROM inventory WHERE partName = ?''', (part,))
-                        partInventory = cursor.fetchone()[0]
+                        cursor.execute('''SELECT quantity, pricePerUnit, pID FROM inventory WHERE partName = ?''', (part,))
+                        partData = cursor.fetchone()
 
+                        partInventory = partData[0]
+                        unit_cost = partData[1]
+                        supplier_id = partData[2]
+                        
+                        # Keep track of which parts are short, and by how much
                         if partInventory < partsNeeded:
                             deficit = partsNeeded - partInventory
-                            partShortage.append(f"{part} (Short: {deficit})")
+                            
+                            # Find supplier name for part
+                            cursor.execute('''SELECT partyName FROM party WHERE pID = ?''', (supplier_id,))
+                            supplier_name = cursor.fetchone()[0]
+                            
+                            partSubtotal = round((unit_cost * deficit), 2)
 
-                    if shortageFound:
+                            partShortage.append(f"{part} (Short: {deficit}) from {supplier_name}")
+
+                            # Estimated arrival date
+                            arrivalDate = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
+
+                            # Adding parts to cart
+                            # Checks what row number is next
+                            currentItemRow = len(cartTable.get_children())
+                            
+                            rowTag = 'evenrow'
+                            if currentItemRow % 2 != 0:
+                                rowTag = 'oddrow'
+                            # Add parts to Cart Table
+                            cartTable.insert(parent='', index='end', values=(part, deficit, partSubtotal, supplier_name, arrivalDate), tags=(rowTag))
+                            
+                    if partShortage:
                         daysToArrive = 44
+                        msg = '''We found parts short of what is needed to fulfill this order and the following parts have been added to the cart automatically:\n'''
+                        msg += "\n".join(partShortage)
+                        msg += f'''\n\nBecause of this, the order will be delayed by {daysToArrive} days.'''
+
+                        messagebox.showwarning("Parts Auto-reordered", msg)
                     else:
                         daysToArrive = 29
 
                 # Estimated arrival date
                 arrivalDate = (datetime.now() + timedelta(days=daysToArrive)).strftime('%Y-%m-%d')
-            
+            # endregion
+
             # Calculate dollar cost
             cursor.execute('''SELECT pricePerUnit FROM inventory WHERE partName = ?''', (itemName,))
             result = cursor.fetchone()
