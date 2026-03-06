@@ -588,9 +588,6 @@ class financePage(tk.Frame):
         updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders", command=lambda: controller.showFrame("inventoryPage"))
         updateInventoryButton.pack(fill="x", pady=5)
 
-        #updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials", command=lambda: controller.showFrame("financePage"))
-        #updateFinancialButton.pack(fill="x", pady=5)
-
         # Main Window
         mainFrame = tk.Frame(self)
         mainFrame.grid(row=0, column=1, sticky="nsew")
@@ -604,7 +601,6 @@ class financePage(tk.Frame):
         # Tables Defined
         revenueTable = ttk.Treeview(tablesFrame)
         expenseTable = ttk.Treeview(tablesFrame)
-        
         
         # region - Create Retailer Revenue Table
             # Assign Table Columns
