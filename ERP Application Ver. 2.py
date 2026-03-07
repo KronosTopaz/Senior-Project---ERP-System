@@ -58,10 +58,6 @@ class dashboardPage(tk.Frame):
         sidebarFrame = tk.Frame(self, width=200)
         sidebarFrame.grid(row=0, column=0, sticky="ns")
 
-        # Sidebar Buttons
-        #dashboardButton = ttk.Button(sidebarFrame, text="Dashboard", command=lambda: controller.showFrame("dashboardPage"))
-        #dashboardButton.pack(fill="x", pady=5)
-
         updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders", command=lambda: controller.showFrame("inventoryPage"))
         updateInventoryButton.pack(fill="x", pady=5)
 
@@ -74,90 +70,75 @@ class dashboardPage(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # Dashboard Header
+        tk.Label(mainFrame, text="Dashboard").pack(pady=10)
+
         # Table SubFrame
         tablesFrame = tk.Frame(mainFrame)
         tablesFrame.pack(fill="both", expand=True)
 
-        # Tables Defined
-        revenueTable = ttk.Treeview(tablesFrame)
-        expenseTable = ttk.Treeview(tablesFrame)
-        retailTable = ttk.Treeview(self)
-        supplierTable = ttk.Treeview(self)
-        orderTable = ttk.Treeview(self)
+        # Table titles
+        tk.Label(tablesFrame, text="Recent Orders (Top 5)").grid(row=0, column=0, pady=(0, 5))
+        tk.Label(tablesFrame, text="Low Inventory Alerts").grid(row=0, column=1, pady=(0, 5))
 
-        # region - Create Revenue Table
+        # Tables Defined
+        self.recentOrdersTable = ttk.Treeview(tablesFrame, height=5)
+        self.lowInventoryTable = ttk.Treeview(tablesFrame, height=5)
+
+        # region - Create Recent Orders Table
             # Assign Table Columns
-        revenueTable['columns'] = ('tID', 'Amount', 'Time', 'pID')
-        revenueTable.column('#0', width=0, stretch=tk.NO)
-        revenueTable.column('tID', anchor=tk.W, width=100)
-        revenueTable.column('Amount', anchor=tk.W, width=60)
-        revenueTable.column('Time', anchor=tk.W, width=125)
-        revenueTable.column('pID', anchor=tk.W, width=45)
+        self.recentOrdersTable['columns'] = ('Order #', 'Company', 'Total Cost', 'Date')
+        self.recentOrdersTable.column('#0', width=0, stretch=tk.NO)
+        self.recentOrdersTable.column('Order #', anchor=tk.W, width=100)
+        self.recentOrdersTable.column('Company', anchor=tk.W, width=120)
+        self.recentOrdersTable.column('Total Cost', anchor=tk.W, width=100)
+        self.recentOrdersTable.column('Date', anchor=tk.W, width=100)
 
         # Create Table headers
-        revenueTable.heading('#0', text="", anchor=tk.W)
-        revenueTable.heading('tID', text="Transaction ID", anchor=tk.W)
-        revenueTable.heading('Amount', text="Amount", anchor=tk.W)
-        revenueTable.heading('Time', text="Time Recorded", anchor=tk.W)
-        revenueTable.heading('pID', text="Party", anchor=tk.W)
+        self.recentOrdersTable.heading('#0', text="", anchor=tk.W)
+        self.recentOrdersTable.heading('Order #', text="Order Number", anchor=tk.W)
+        self.recentOrdersTable.heading('Company', text="Company", anchor=tk.W)
+        self.recentOrdersTable.heading('Total Cost', text="Total Amount", anchor=tk.W)
+        self.recentOrdersTable.heading('Date', text="Date", anchor=tk.W)
 
-        cursor.execute('SELECT * FROM revenue')
-        data = cursor.fetchall()
+        # Define row colors
+        self.recentOrdersTable.tag_configure('oddrow', background="#EBEBEB")
+        self.recentOrdersTable.tag_configure('evenrow', background="#C8C8C8")
 
-        revenueTable.tag_configure('oddrow', background="#EBEBEB")
-        revenueTable.tag_configure('evenrow', background="#C8C8C8")
-
-        # Add data to Revenue Table
-        for i in range(len(data)):
-            if i % 2:
-                revenueTable.insert(parent='', index=i, values=data[i], tags=('evenrow',))
-            else:
-                revenueTable.insert(parent='', index=i, values=data[i], tags=('oddrow',))
-
-        revenueTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.recentOrdersTable.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
         tablesFrame.grid_columnconfigure(0, weight=1)
         # endregion
 
-        # region - Create Expense Table
-            # Assign Table Columns
-        expenseTable['columns'] = ('tID', 'Amount', 'Time', 'pID')
-        expenseTable.column('#0', width=0, stretch=tk.NO)
-        expenseTable.column('tID', anchor=tk.W, width=100)
-        expenseTable.column('Amount', anchor=tk.W, width=60)
-        expenseTable.column('Time', anchor=tk.W, width=125)
-        expenseTable.column('pID', anchor=tk.W, width=45)
+        # region - Create Low Part Inventory Table
+        # Assign Table Columns
+        self.lowInventoryTable['columns'] = ('Part', 'Quantity', 'Supplier')
+        self.lowInventoryTable.column('#0', width=0, stretch=tk.NO)
+        self.lowInventoryTable.column('Part', anchor=tk.W, width=120)
+        self.lowInventoryTable.column('Quantity', anchor=tk.W, width=80)
+        self.lowInventoryTable.column('Supplier', anchor=tk.W, width=120)
 
-        # Create Table headers
-        expenseTable.heading('#0', text="", anchor=tk.W)
-        expenseTable.heading('tID', text="Transaction ID", anchor=tk.W)
-        expenseTable.heading('Amount', text="Amount", anchor=tk.W)
-        expenseTable.heading('Time', text="Time Recorded", anchor=tk.W)
-        expenseTable.heading('pID', text="Party", anchor=tk.W)
+        # Assign Table Headers
+        self.lowInventoryTable.heading('#0', text="", anchor=tk.W)
+        self.lowInventoryTable.heading('Part', text="Part Name", anchor=tk.W)
+        self.lowInventoryTable.heading('Quantity', text="Quantity Left", anchor=tk.W)
+        self.lowInventoryTable.heading('Supplier', text="Supplier", anchor=tk.W)
 
-        cursor.execute('SELECT * FROM expense')
-        data = cursor.fetchall()
+        # Assign row colors
+        self.lowInventoryTable.tag_configure('oddrow', background="#EBEBEB")
+        self.lowInventoryTable.tag_configure('evenrow', background="#C8C8C8")
 
-        expenseTable.tag_configure('oddrow', background="#EBEBEB")
-        expenseTable.tag_configure('evenrow', background="#C8C8C8")
-
-        # Add data to Revenue Table
-        for i in range(len(data)):
-            if i % 2:
-                expenseTable.insert(parent='', index=i, values=data[i], tags=('evenrow',))
-            else:
-                expenseTable.insert(parent='', index=i, values=data[i], tags=('oddrow',))
-
-        expenseTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        # Place table
+        self.lowInventoryTable.grid(row=1, column=1, sticky="nsew", padx=10, pady=5)
         tablesFrame.grid_columnconfigure(1, weight=1)
         # endregion
 
         # region - Sales Projection Graph
         # Graph Frame
         salesGraphFrame = tk.Frame(mainFrame)
-        salesGraphFrame.pack(fill="both", expand=True, pady=10)
+        salesGraphFrame.pack(fill="both", expand=True, padx=20, pady=20)
 
         # The figure that will contain the plot
-        fig = Figure(figsize = (7,5), dpi = 100)
+        fig = Figure(figsize = (7,4), dpi = 100)
         
         # Sales Data
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -174,6 +155,9 @@ class dashboardPage(tk.Frame):
         plot1.set_ylabel("Sales ($)")
         plot1.set_title("Monthly Sales Projection")
         plot1.tick_params(axis="x", rotation=45)
+        
+        # Shrinks graph as needed
+        fig.tight_layout()
 
         # creating the Tkinter canvas
         # containing the Matplotlib figure
@@ -187,6 +171,44 @@ class dashboardPage(tk.Frame):
         toolbar = NavigationToolbar2Tk(canvas, salesGraphFrame)
         toolbar.update()
         # endregion
+
+        # Run refresh data
+        self.refreshData()
+    
+    # Function to refresh data
+    def refreshData(self):
+        for item in self.recentOrdersTable.get_children():
+            self.recentOrdersTable.delete(item)
+        for item in self.lowInventoryTable.get_children():
+            self.lowInventoryTable.delete(item)
+        
+        # Query DB for Recent Orders
+        recentOrdersQuery = '''SELECT orders.orderNumber, party.partyName, orders.totalCost, orders.destinationDate FROM orders
+                            JOIN party ON orders.pID = party.pID
+                            ORDER BY orders.orderNumber DESC LIMIT 5'''
+        cursor.execute(recentOrdersQuery)
+        orderData = cursor.fetchall()
+
+        # Add data to Recent Orders Table
+        for i in range(len(orderData)):
+            if i % 2:
+                self.recentOrdersTable.insert(parent='', index=i, values=orderData[i], tags=('evenrow',))
+            else:
+                self.recentOrdersTable.insert(parent='', index=i, values=orderData[i], tags=('oddrow',))
+        
+        # Query DB for parts with low inventory (below 500 units)
+        lowInventoryQuery = '''SELECT inventory.partName, inventory.quantity, party.partyName FROM inventory
+                            JOIN party ON inventory.pID = party.pID WHERE inventory.quantity < 500
+                            ORDER BY inventory.quantity ASC'''
+        cursor.execute(lowInventoryQuery)
+        lowInventoryData = cursor.fetchall()
+        
+        # Add data to Low Inventory Table
+        for i in range(len(lowInventoryData)):
+            if i % 2:
+                self.lowInventoryTable.insert(parent='', index=i, values=lowInventoryData[i], tags=('evenrow',))
+            else:
+                self.lowInventoryTable.insert(parent='', index=i, values=lowInventoryData[i], tags=('oddrow',)) 
 
 class inventoryPage(tk.Frame):
     def __init__(self, parent, controller):
