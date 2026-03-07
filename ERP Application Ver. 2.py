@@ -46,6 +46,9 @@ class app(tk.Tk):
         frame = self.frames[pageName]
         frame.tkraise()
 
+        if hasattr(frame, 'refreshData'):
+            frame.refreshData()
+
 class dashboardPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -198,9 +201,6 @@ class inventoryPage(tk.Frame):
         dashboardButton = ttk.Button(sidebarFrame, text="Dashboard", command=lambda: controller.showFrame("dashboardPage"))
         dashboardButton.pack(fill="x", pady=5)
 
-        #updateInventoryButton = ttk.Button(sidebarFrame, text="Update Inventory and Orders", command=lambda: controller.showFrame("inventoryPage"))
-        #updateInventoryButton.pack(fill="x", pady=5)
-
         updateFinancialButton = ttk.Button(sidebarFrame, text="Update Financials", command=lambda: controller.showFrame("financePage"))
         updateFinancialButton.pack(fill="x", pady=5)
 
@@ -212,11 +212,14 @@ class inventoryPage(tk.Frame):
 
         # Table SubFrame
         tablesFrame = tk.Frame(mainFrame)
-        tablesFrame.pack(fill="both", expand=True)
+        tablesFrame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Add titles to tables
+        tk.Label(tablesFrame, text="Current Inventory").grid(row=0, column=0, pady=(0, 5))
+        tk.Label(tablesFrame, text="Shopping Cart").grid(row=0, column=1, pady=(0, 5))
 
         # Tables Defined
         currInventoryTable = ttk.Treeview(tablesFrame)
-        orderdetailsTable = ttk.Treeview(tablesFrame)
         cartTable = ttk.Treeview(tablesFrame)
         
         # region - Create Current Inventory Table
@@ -249,8 +252,9 @@ class inventoryPage(tk.Frame):
             else:
                 currInventoryTable.insert(parent='', index=i, values=inventoryData[i], tags=('oddrow',))
 
-        currInventoryTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        currInventoryTable.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         tablesFrame.grid_columnconfigure(0, weight=1)
+        tablesFrame.grid_rowconfigure(1, weight=1)
         # endregion
 
         # region - Create Cart Table
@@ -274,17 +278,22 @@ class inventoryPage(tk.Frame):
         cartTable.tag_configure('oddrow', background="#EBEBEB")
         cartTable.tag_configure('evenrow', background="#C8C8C8")
 
-        cartTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        cartTable.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
         tablesFrame.grid_columnconfigure(0, weight=1)
+        tablesFrame.grid_rowconfigure(1, weight=1)
         # endregion
 
         # region - Add a new order
-        inputFrame = tk.Frame(mainFrame)
-        inputFrame.pack(fill="both", expand=True, pady=10)
+        inputFrame = tk.Frame(mainFrame, relief=tk.GROOVE, borderwidth=2)
+        inputFrame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        tk.Label(inputFrame, text="Add a new order", pady=10).pack()
+        tk.Label(inputFrame, text="Order Management").pack(pady=(10, 5))
         
         # Select mode
+        # Mode Selection Frame
+        modeFrame = tk.Frame(inputFrame)
+        modeFrame.pack(pady=5)
+
         # Dropdown menu options
         partOptions = []
         parts = cursor.execute('''SELECT partName FROM inventory WHERE sku < (SELECT MAX(sku) FROM inventory)''')
@@ -462,24 +471,28 @@ class inventoryPage(tk.Frame):
                 amountInput.delete(0, tk.END)
 
         # Button to confirm mode
-        tk.Button(inputFrame, text="Order Parts", command=orderPartSelected).pack(anchor=tk.W)
-        tk.Button(inputFrame, text="Shipping Phones", command=shipPhoneSelected).pack(anchor=tk.W)
+        tk.Button(modeFrame, text="Order Parts", width=15, command=orderPartSelected).grid(row=0, column=0, padx=10)
+        tk.Button(modeFrame, text="Shipping Phones", width=15, command=shipPhoneSelected).grid(row=0, column=1, padx=10)
         
+        # Order Form Frame
+        formFrame = tk.Frame(inputFrame)
+        formFrame.pack(pady=15)
+
         # Dropdown menu frame
-        dropdownFrame = tk.Frame(inputFrame)
-        dropdownFrame.pack(pady=10, anchor=tk.W)
+        tk.Label(formFrame, text="Select an Item:").grid(row=0, column=0, padx=(10, 2))
+        dropdownFrame = tk.Frame(formFrame)
+        dropdownFrame.grid(row=0, column=1, padx=(0, 20))
 
         # Generate dropdown menu
         orderPartSelected()
 
         # Enter Quantity
-        tk.Label(inputFrame, text="Quantity:").pack(anchor=tk.W)
-        amountInput = tk.Entry(inputFrame)
-        amountInput.pack(anchor=tk.W)
+        tk.Label(formFrame, text="Quantity:").grid(row=0, column=2, padx=(0, 2))
+        amountInput = tk.Entry(formFrame, width=15)
+        amountInput.grid(row=0, column=3, padx=(0, 20))
 
-        # Button to confirm order
-        tk.Button(inputFrame, text="Add to Cart", command=createOrder).pack()
-
+        # Button to Add to Card
+        tk.Button(formFrame, text="Add to Cart", command=createOrder, width=15).grid(row=0, column=4, padx=10)
         # endregion
 
         # region - Calculate new inventory amounts
@@ -569,7 +582,12 @@ class inventoryPage(tk.Frame):
             
             messagebox.showinfo("Success", "All orders have been successfully updated in the database")        
 
-        tk.Button(inputFrame, text="Confirm Orders", command=confirmOrder).pack()
+        # Submit Button Frame
+        submitFrame = tk.Frame(inputFrame)
+        submitFrame.pack(pady=(5, 15))
+
+        # Button to confirm orders
+        tk.Button(inputFrame, text="Confirm Orders", command=confirmOrder, width=25).pack()
         # endregion
         
 class financePage(tk.Frame):
@@ -594,29 +612,58 @@ class financePage(tk.Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # region - Profit & Loss Summary
+        summaryFrame = tk.Frame(mainFrame, relief=tk.RIDGE, borderwidth=2)
+        summaryFrame.pack(fill="x", padx=10, pady=(10, 0))
+
+        # Revenue Label
+        tk.Label(summaryFrame, text="Total Revenue").grid(row=0, column=0, pady=(10, 0))
+        self.labelTotalRevenue = tk.Label(summaryFrame, text="$0.00")
+        self.labelTotalRevenue.grid(row=1, column=0, pady=(0, 10))
+
+        # Expenses Label
+        tk.Label(summaryFrame, text="Total Expenses").grid(row=0, column=1, pady=(10, 0))
+        self.labelTotalExpense = tk.Label(summaryFrame, text="$0.00")
+        self.labelTotalExpense.grid(row=1, column=1, pady=(0,10))
+
+        # Net Profit/Loss Label
+        tk.Label(summaryFrame, text="Net Profit").grid(row=0, column=2, pady=(10,0))
+        self.labelNetProfit = tk.Label(summaryFrame, text="$0.00")
+        self.labelNetProfit.grid(row=1, column=2, pady=(0,10))
+
+        # Center columns
+        summaryFrame.grid_columnconfigure(0, weight=1)
+        summaryFrame.grid_columnconfigure(1, weight=1)
+        summaryFrame.grid_columnconfigure(2, weight=1)
+        # endregion
+
         # Table SubFrame
         tablesFrame = tk.Frame(mainFrame)
         tablesFrame.pack(fill="both", expand=True)
 
+        # Table Labels
+        tk.Label(tablesFrame, text="Revenue (Retailers)",).grid(row=0, column=0, pady=(0, 5))
+        tk.Label(tablesFrame, text="Expenses (Suppliers)",).grid(row=0, column=1, pady=(0, 5))
+
         # Tables Defined
-        revenueTable = ttk.Treeview(tablesFrame)
-        expenseTable = ttk.Treeview(tablesFrame)
+        self.revenueTable = ttk.Treeview(tablesFrame)
+        self.expenseTable = ttk.Treeview(tablesFrame)
         
         # region - Create Retailer Revenue Table
             # Assign Table Columns
-        revenueTable['columns'] = ('Retailer', 'tID', 'Amount', 'Time')
-        revenueTable.column('#0', width=0, stretch=tk.NO)
-        revenueTable.column('Retailer', anchor=tk.W, width=100)
-        revenueTable.column('tID', anchor=tk.W, width=100)
-        revenueTable.column('Amount', anchor=tk.W, width=60)
-        revenueTable.column('Time', anchor=tk.W, width=125)
+        self.revenueTable['columns'] = ('Retailer', 'tID', 'Amount', 'Time')
+        self.revenueTable.column('#0', width=0, stretch=tk.NO)
+        self.revenueTable.column('Retailer', anchor=tk.W, width=100)
+        self.revenueTable.column('tID', anchor=tk.W, width=100)
+        self.revenueTable.column('Amount', anchor=tk.W, width=60)
+        self.revenueTable.column('Time', anchor=tk.W, width=125)
 
         # Create Table headers
-        revenueTable.heading('#0', text="", anchor=tk.W)
-        revenueTable.heading('Retailer', text="Retailer", anchor=tk.W)
-        revenueTable.heading('tID', text="Transaction ID", anchor=tk.W)
-        revenueTable.heading('Amount', text="Amount", anchor=tk.W)
-        revenueTable.heading('Time', text="Time Recorded", anchor=tk.W)
+        self.revenueTable.heading('#0', text="", anchor=tk.W)
+        self.revenueTable.heading('Retailer', text="Retailer", anchor=tk.W)
+        self.revenueTable.heading('tID', text="Transaction ID", anchor=tk.W)
+        self.revenueTable.heading('Amount', text="Amount", anchor=tk.W)
+        self.revenueTable.heading('Time', text="Time Recorded", anchor=tk.W)
 
         retailerQuery = '''SELECT party.partyName, revenue.tID, revenue.amount, revenue.timeRecorded
                     FROM revenue
@@ -624,105 +671,115 @@ class financePage(tk.Frame):
         cursor.execute(retailerQuery)
         revenueData = cursor.fetchall()
 
-        revenueTable.tag_configure('oddrow', background="#EBEBEB")
-        revenueTable.tag_configure('evenrow', background="#C8C8C8")
+        self.revenueTable.tag_configure('oddrow', background="#EBEBEB")
+        self.revenueTable.tag_configure('evenrow', background="#C8C8C8")
 
         # Add data to Revenue Table
         for i in range(len(revenueData)):
             if i % 2:
-                revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('evenrow',))
+                self.revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('evenrow',))
             else:
-                revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('oddrow',))
+                self.revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('oddrow',))
 
-        revenueTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.revenueTable.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         tablesFrame.grid_columnconfigure(0, weight=1)
         # endregion
         
         # region - Create Supplier Expense Table
             # Assign Table Columns
-        expenseTable['columns'] = ('Supplier', 'tID', 'Amount', 'Time')
-        expenseTable.column('#0', width=0, stretch=tk.NO)
-        expenseTable.column('Supplier', anchor=tk.W, width=100)
-        expenseTable.column('tID', anchor=tk.W, width=100)
-        expenseTable.column('Amount', anchor=tk.W, width=60)
-        expenseTable.column('Time', anchor=tk.W, width=125)
+        self.expenseTable['columns'] = ('Supplier', 'tID', 'Amount', 'Time')
+        self.expenseTable.column('#0', width=0, stretch=tk.NO)
+        self.expenseTable.column('Supplier', anchor=tk.W, width=100)
+        self.expenseTable.column('tID', anchor=tk.W, width=100)
+        self.expenseTable.column('Amount', anchor=tk.W, width=60)
+        self.expenseTable.column('Time', anchor=tk.W, width=125)
 
         # Create Table headers
-        expenseTable.heading('#0', text="", anchor=tk.W)
-        expenseTable.heading('Supplier', text="Supplier", anchor=tk.W)
-        expenseTable.heading('tID', text="Transaction ID", anchor=tk.W)
-        expenseTable.heading('Amount', text="Amount", anchor=tk.W)
-        expenseTable.heading('Time', text="Time Recorded", anchor=tk.W)
+        self.expenseTable.heading('#0', text="", anchor=tk.W)
+        self.expenseTable.heading('Supplier', text="Supplier", anchor=tk.W)
+        self.expenseTable.heading('tID', text="Transaction ID", anchor=tk.W)
+        self.expenseTable.heading('Amount', text="Amount", anchor=tk.W)
+        self.expenseTable.heading('Time', text="Time Recorded", anchor=tk.W)
 
         supplierQuery = '''SELECT party.partyName, expense.tID, expense.amount, expense.timeRecorded
                     FROM expense
                     JOIN party ON expense.pID = party.pID'''
 
         cursor.execute(supplierQuery)
-        data = cursor.fetchall()
+        expenseData = cursor.fetchall()
 
-        expenseTable.tag_configure('oddrow', background="#EBEBEB")
-        expenseTable.tag_configure('evenrow', background="#C8C8C8")
+        self.expenseTable.tag_configure('oddrow', background="#EBEBEB")
+        self.expenseTable.tag_configure('evenrow', background="#C8C8C8")
 
         # Add data to Revenue Table
-        for i in range(len(data)):
+        for i in range(len(expenseData)):
             if i % 2:
-                expenseTable.insert(parent='', index=i, values=data[i], tags=('evenrow',))
+                self.expenseTable.insert(parent='', index=i, values=expenseData[i], tags=('evenrow',))
             else:
-                expenseTable.insert(parent='', index=i, values=data[i], tags=('oddrow',))
+                self.expenseTable.insert(parent='', index=i, values=expenseData[i], tags=('oddrow',))
 
-        expenseTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        self.expenseTable.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
         tablesFrame.grid_columnconfigure(1, weight=1)
+        tablesFrame.grid_rowconfigure(1, weight=1)
         # endregion
 
-        # region - Input Frame
-        inputFrame = tk.Frame(mainFrame)
-        inputFrame.pack(fill="both", expand=True, pady=10)
-
-        tk.Label(inputFrame, text="Add a new transaction", pady=10).pack()
+        # Call function to refresh tables
+        self.refreshData()
+    
+    # Function to refresh tables
+    def refreshData(self):
+        for item in self.revenueTable.get_children():
+            self.revenueTable.delete(item)
+        for item in self.expenseTable.get_children():
+            self.expenseTable.delete(item)
         
-        #Dropdown Selection
-        tk.Label(inputFrame, text="Retail or Supplier transaction?").pack()
+        # Query DB again for Retailers
+        retailerQuery = '''SELECT party.partyName, revenue.tID, revenue.amount, revenue.timeRecorded
+                FROM revenue
+                JOIN party ON revenue.pID = party.pID'''
+        cursor.execute(retailerQuery)
+        revenueData = cursor.fetchall()
+
+        # Add data to Revenue Table
+        for i in range(len(revenueData)):
+            if i % 2:
+                self.revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('evenrow',))
+            else:
+                self.revenueTable.insert(parent='', index=i, values=revenueData[i], tags=('oddrow',))
         
-        partyOptions = ["Samsung", "TSMC", "Qualcomm", "LG", "Foxconn", "Arduino", "AAC Technologies",
-                        "AKG", "InvenSense Inc.", "EEJA LTD.", "Innovatronix", "Behringer",
-                        "Agood Company, Vishay", "Anker", "SK Hynix", "Packlane", "Best Buy",
-                        "Microcenter", "Fry's Electronics", "Radioshack"]
+        # Query DB again for Suppliers
+        supplierQuery = '''SELECT party.partyName, expense.tID, expense.amount, expense.timeRecorded
+                FROM expense
+                JOIN party ON expense.pID = party.pID'''
+
+        cursor.execute(supplierQuery)
+        expenseData = cursor.fetchall()
         
-        selectedValue = StringVar(value="Samsung")
-        tk.OptionMenu(inputFrame, selectedValue, *partyOptions).pack()
-        
-        # Input a number
-        tk.Label(inputFrame, text="Amount:").pack()
-        amountInput = tk.Entry(inputFrame)
-        amountInput.pack()
+        # Add data to Revenue Table
+        for i in range(len(expenseData)):
+            if i % 2:
+                self.expenseTable.insert(parent='', index=i, values=expenseData[i], tags=('evenrow',))
+            else:
+                self.expenseTable.insert(parent='', index=i, values=expenseData[i], tags=('oddrow',))
 
-        # Input a Date & Time
-        tk.Label(inputFrame, text="Select a date").pack()
-        cal = Calendar(inputFrame, selectmode='day')
-        cal.pack()
+        # Calculate Profit & Loss
+        # Grab total revenue
+        cursor.execute('''SELECT SUM(amount) FROM revenue''')
+        revenueResult = cursor.fetchone()[0]
+        totalRevenue = revenueResult if revenueResult else 0.0
 
-        #tk.Label(inputFrame, text="Enter a time (Format: HH:MM:SS)").pack()
-        #timeInput = tk.Entry(inputFrame)
-        #timeInput.pack()
+        # Grab Total Expenses
+        cursor.execute('''SELECT SUM(amount) FROM expense''')
+        expenseResult = cursor.fetchone()[0]
+        totalExpense = expenseResult if expenseResult else 0.0
 
-        # Add values to DB & table
-        def getTransaction():
-            # Grab Date & Time
-            dateOutput = cal.get_date()
-            #timeOutput = timeInput.get()
-            
-            # Grab retailer or supplier
-            partyOutput = selectedValue.get()
+        # Calculate Profit/Loss
+        netProfit = totalRevenue - totalExpense
 
-            # Grab dollar amount
-            amountOutput = amountInput.get()
-
-            cursor.execute('''
-                            ''')
-        
-        tk.Button(inputFrame, text="Update", command = getTransaction).pack()
-        # endregion
+        # Update Labels
+        self.labelTotalRevenue.config(text=f"${totalRevenue:,.2f}")
+        self.labelTotalExpense.config(text=f"${totalExpense:,.2f}")
+        self.labelNetProfit.config(text=f"${netProfit:,.2f}")
 
 #----
 # Main
