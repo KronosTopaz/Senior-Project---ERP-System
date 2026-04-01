@@ -79,7 +79,7 @@ class dashboardPage(tk.Frame):
 
         # Table titles
         tk.Label(tablesFrame, text="Recent Orders (Top 5)").grid(row=0, column=0, pady=(0, 5))
-        tk.Label(tablesFrame, text="Low Inventory Alerts").grid(row=0, column=1, pady=(0, 5))
+        tk.Label(tablesFrame, text="Low Inventory Alerts (< 500)").grid(row=0, column=1, pady=(0, 5))
 
         # Tables Defined
         self.recentOrdersTable = ttk.Treeview(tablesFrame, height=5)
