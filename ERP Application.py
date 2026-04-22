@@ -98,7 +98,7 @@ class dashboardPage(tk.Frame):
         self.recentOrdersTable.heading('#0', text="", anchor=tk.W)
         self.recentOrdersTable.heading('Order #', text="Order Number", anchor=tk.W)
         self.recentOrdersTable.heading('Company', text="Company", anchor=tk.W)
-        self.recentOrdersTable.heading('Total Cost', text="Total Amount", anchor=tk.W)
+        self.recentOrdersTable.heading('Total Cost', text="Total Cost", anchor=tk.W)
         self.recentOrdersTable.heading('Date', text="Date", anchor=tk.W)
 
         # Define row colors
